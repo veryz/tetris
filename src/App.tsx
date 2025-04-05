@@ -1,52 +1,62 @@
-import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
+import { KeyboardEvent, useState } from 'react';
 import './App.css';
 import { randomTetris, Tetris } from './tetris/tetris';
 import { render } from './tetris/render';
 
 function App() {
-  const [count, setCount] = useState(0);
   const [tetris, setTetris] = useState<Tetris | undefined>();
   const [textTetris, setTextTetris] = useState<string | undefined>(undefined);
+  const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
 
   function generateTetris() {
     const tetris = randomTetris();
 
-    setTetris(() => tetris);
+    setTetris(tetris);
     setTextTetris(JSON.stringify(tetris, null, 2));
     const canvas = document.getElementById('tetris') as HTMLCanvasElement;
     render(tetris, canvas);
   }
 
+  function handleInput(event: KeyboardEvent<HTMLCanvasElement>) {
+    setPressedKey(event.code);
+  }
+
   return (
     <>
-      <canvas id="tetris" width="300" height="600"></canvas>
+      <div id="game">
+        <canvas
+          id="tetris"
+          width="300"
+          height="600"
+          tabIndex={0}
+          onKeyDown={handleInput}
+        ></canvas>
 
-      <button onClick={generateTetris}>create a tetris!</button>
+        <div id="panel">
+          <ul>
+            <li>
+              Grid dim: {tetris?.grid.w} x {tetris?.grid.h}
+            </li>
+            <li>
+              Current: <code>{tetris?.currentPiece}</code>
+            </li>
+            <li>
+              Memory: <code>{tetris?.memory ?? 'none'}</code>
+            </li>
+            <li>
+              Next pieces: <code>{tetris?.batch.join(' - ')}</code>
+            </li>
+            <li>Speed: {tetris?.speed}</li>
+            <li>
+              Key: <code>{pressedKey}</code>
+            </li>
+          </ul>
 
-      <pre>{textTetris}</pre>
-
-      {/* <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+          <button onClick={generateTetris}>create a tetris!</button>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p> */}
+
+      {/* <pre>{textTetris}</pre> */}
     </>
   );
 }

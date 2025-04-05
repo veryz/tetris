@@ -6,11 +6,7 @@ function color2rgb(color: Color) {
 }
 
 export function render(tetris: Tetris, canvas: HTMLCanvasElement) {
-  if (!canvas.getContext) {
-    throw new Error('cannot draw');
-  }
-
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext?.('2d');
   if (ctx == null) {
     throw new Error('cannot draw');
   }
