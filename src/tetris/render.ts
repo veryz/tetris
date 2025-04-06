@@ -16,9 +16,9 @@ function color2rgb(color: Color) {
 function piece2element(piece: Piece): Element {
   switch (piece) {
     case 'L':
-      return { color: 'orange', data: [1, 0, 0, 0, 1, 1, 1, 0], lines: 2 };
+      return { color: 'orange', data: [0, 0, 1, 0, 1, 1, 1], lines: 2 };
     case 'J':
-      return { color: 'blue', data: [0, 0, 1, 0, 1, 1, 1], lines: 2 };
+      return { color: 'blue', data: [1, 0, 0, 0, 1, 1, 1, 0], lines: 2 };
     case 'I':
       return { color: 'cyan', data: [1, 1, 1, 1], lines: 1 };
     case 'O':
@@ -85,6 +85,21 @@ function renderSequence(
   }
 }
 
+function renderGroup(tetris: Tetris, canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext?.('2d');
+  if (!ctx) throw new Error('cannot draw');
+
+  const xfactor = canvas.width / tetris.grid.w;
+  const yfactor = canvas.height / tetris.grid.h;
+
+  const group = tetris.currentGroup;
+  group.points.forEach((pt) => {
+    const color = tetris.grid.get(pt.x, pt.y);
+    ctx.fillStyle = color2rgb(color);
+    ctx.fillRect(pt.x * xfactor, pt.y * yfactor, xfactor, yfactor);
+  });
+}
+
 function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext?.('2d');
   if (ctx == null) {
@@ -102,8 +117,15 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
     }
   }
 
-  ctx.fillStyle = 'brown'
-  ctx.fillRect(tetris.cursor.x * xfactor, tetris.cursor.y * yfactor, xfactor, yfactor);
+  ctx.fillStyle = 'brown';
+  ctx.fillRect(
+    tetris.cursor.x * xfactor,
+    tetris.cursor.y * yfactor,
+    xfactor,
+    yfactor,
+  );
+
+  renderGroup(tetris, canvas);
 }
 
 function renderBatch(tetris: Tetris, canvas: HTMLCanvasElement) {
