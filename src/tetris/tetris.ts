@@ -84,16 +84,23 @@ export class Tetris {
   ) {}
 }
 
+export function randomBatch(): Piece[] {
+  const batch: Piece[] = [];
+  const all = ['L', 'J', 'I', 'O', 'S', 'Z', 'T'] satisfies Piece[];
+
+  while (all.length > 0) {
+    const i = Math.floor(Math.random() * all.length);
+    const x = all.splice(i, 1)[0];
+    batch.push(x);
+  }
+
+  return batch;
+}
+
 export function randomTetris() {
   console.log('creating a random tetris!');
   const grid = Grid.random(10, 20);
-  const tetris = new Tetris(
-    grid,
-    'T',
-    null,
-    false,
-    ['L', 'J', 'I', 'O', 'S', 'Z', 'T'],
-    1,
-  );
+  const batch = randomBatch();
+  const tetris = new Tetris(grid, 'T', null, false, batch, 1);
   return tetris;
 }

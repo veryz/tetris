@@ -4,15 +4,16 @@
   padding: 2rem;
 }
 
+canvas {
+  border: 1px solid black;
+  margin: 0 15px;
+}
+
 #game {
   display: flex;
+  align-items: flex-start;
 }
 
 #panel {
   margin: 0 2px;
-}
-
-#tetris {
-  margin: 0 2px;
-  border: 1px solid black;
 }

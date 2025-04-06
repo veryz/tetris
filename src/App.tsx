@@ -13,8 +13,9 @@ function App() {
 
     setTetris(tetris);
     setTextTetris(JSON.stringify(tetris, null, 2));
-    const canvas = document.getElementById('tetris') as HTMLCanvasElement;
-    render(tetris, canvas);
+    const gameCanvas = document.getElementById('tetris') as HTMLCanvasElement;
+    const batchCanvas = document.getElementById('batch') as HTMLCanvasElement;
+    render(tetris, gameCanvas, batchCanvas);
   }
 
   function handleInput(event: KeyboardEvent<HTMLCanvasElement>) {
@@ -32,8 +33,10 @@ function App() {
           onKeyDown={handleInput}
         ></canvas>
 
+        <canvas id="batch" width="90" height="570"></canvas>
+
         <div id="panel">
-          <ul>
+          <ul id="debug">
             <li>
               Grid dim: {tetris?.grid.w} x {tetris?.grid.h}
             </li>
