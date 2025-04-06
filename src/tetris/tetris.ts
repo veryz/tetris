@@ -5,6 +5,7 @@ export type Color =
   | 'yellow'
   | 'purple'
   | 'orange'
+  | 'cyan'
   | 'blank';
 
 function randomColor() {
@@ -15,6 +16,7 @@ function randomColor() {
     'yellow',
     'purple',
     'orange',
+    'cyan',
     'blank',
   ] satisfies Color[];
   return all[Math.floor(Math.random() * all.length)];
