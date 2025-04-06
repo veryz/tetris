@@ -81,7 +81,44 @@ export class Tetris {
     public usedMemory: boolean,
     public batch: Piece[],
     public speed: number,
+    public cursor: { x: number; y: number },
   ) {}
+
+  // BEGIN Player actions
+
+  left() {
+    this.setCursor(this.cursor.x - 1, this.cursor.y);
+  }
+
+  right() {
+    this.setCursor(this.cursor.x + 1, this.cursor.y);
+  }
+
+  up() {
+    this.setCursor(this.cursor.x, this.cursor.y - 1);
+  }
+
+  down() {
+    this.setCursor(this.cursor.x, this.cursor.y + 1);
+  }
+
+  space() {
+    this.setCursor(this.cursor.x, this.grid.h - 1);
+  }
+
+  swap() {
+    throw new Error('swap not implemented');
+  }
+
+  // END Player actions
+
+  tick() {
+    this.setCursor(this.cursor.x, Math.min(this.cursor.y + 1, this.grid.h - 1));
+  }
+
+  setCursor(x: number, y: number) {
+    this.cursor = { x, y };
+  }
 }
 
 export function randomBatch(): Piece[] {
@@ -99,8 +136,8 @@ export function randomBatch(): Piece[] {
 
 export function randomTetris() {
   console.log('creating a random tetris!');
-  const grid = Grid.random(10, 20);
+  const grid = new Grid(10, 20);
   const batch = randomBatch();
-  const tetris = new Tetris(grid, 'T', null, false, batch, 1);
+  const tetris = new Tetris(grid, 'T', null, false, batch, 1, { x: 5, y: 10 });
   return tetris;
 }

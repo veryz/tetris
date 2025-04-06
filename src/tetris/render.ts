@@ -101,6 +101,9 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
       ctx.fillRect(x * xfactor, y * yfactor, xfactor, yfactor);
     }
   }
+
+  ctx.fillStyle = 'brown'
+  ctx.fillRect(tetris.cursor.x * xfactor, tetris.cursor.y * yfactor, xfactor, yfactor);
 }
 
 function renderBatch(tetris: Tetris, canvas: HTMLCanvasElement) {

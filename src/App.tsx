@@ -7,19 +7,65 @@ function App() {
   const [tetris, setTetris] = useState<Tetris | undefined>();
   const [textTetris, setTextTetris] = useState<string | undefined>(undefined);
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
+  const [ticker, setTicker] = useState<number | undefined>();
+
+  function update(tetris: Tetris) {
+    if (!tetris) return;
+
+    const gameCanvas = document.getElementById('tetris') as HTMLCanvasElement;
+    const batchCanvas = document.getElementById('batch') as HTMLCanvasElement;
+    render(tetris, gameCanvas, batchCanvas);
+  }
+
+  function tick(tetris: Tetris) {
+    tetris.tick();
+    update(tetris);
+  }
 
   function generateTetris() {
     const tetris = randomTetris();
 
     setTetris(tetris);
     setTextTetris(JSON.stringify(tetris, null, 2));
-    const gameCanvas = document.getElementById('tetris') as HTMLCanvasElement;
-    const batchCanvas = document.getElementById('batch') as HTMLCanvasElement;
-    render(tetris, gameCanvas, batchCanvas);
+
+    update(tetris);
+
+    clearInterval(ticker);
+    const nextTicker = setInterval(() => tick(tetris), 1000);
+    setTicker(nextTicker);
   }
 
   function handleInput(event: KeyboardEvent<HTMLCanvasElement>) {
+    if (!tetris) return;
     setPressedKey(event.code);
+
+    switch (event.code) {
+      case 'ArrowUp':
+        tetris.up();
+        break;
+
+      case 'ArrowDown':
+        tetris.down();
+        break;
+
+      case 'ArrowLeft':
+        tetris.left();
+        break;
+
+      case 'ArrowRight':
+        tetris.right();
+        break;
+
+      case 'Space':
+        tetris.space();
+        break;
+
+      case 'KeyC':
+        tetris.swap();
+        break;
+    }
+
+    update(tetris);
   }
 
   return (
