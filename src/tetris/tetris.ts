@@ -54,8 +54,12 @@ export class Grid {
     this.grid[x][y] = c;
   }
 
+  isValid(x: number, y: number) {
+    return 0 <= x && x <= this.w && 0 <= y && y <= this.h;
+  }
+
   private validate(x: number, y: number) {
-    if (0 <= x && x <= this.w && 0 <= y && y <= this.h) return;
+    if (this.isValid(x, y)) return;
     throw new Error('out of bounds');
   }
 
@@ -79,6 +83,7 @@ export interface Point {
 }
 
 export type Position = Point;
+export type Vector = Point;
 
 function point(x: number, y: number): Point {
   return { x, y };
@@ -92,6 +97,9 @@ export interface Group {
   rotate(): void;
   canSpawn(): boolean;
   spawn(): void;
+  remove(): void;
+  canMove(x: number, y: number): boolean;
+  move(x: number, y: number): void;
 }
 
 function pointsToSpawn(grid: Grid, points: Point[], origin: Point) {
@@ -105,9 +113,26 @@ function pointsToSpawn(grid: Grid, points: Point[], origin: Point) {
     squares.push(point(x, y));
     return true;
   });
-  if (!canPlace) throw new Error('cannot place T');
 
   return { canPlace, points: squares };
+}
+
+function translate(points: Point[], vector: Vector) {
+  return points.map((pt) => point(pt.x + vector.x, pt.y + vector.y));
+}
+
+function rotate(points: Point[], angle: 0 | 90 | 180 | 270 = 90) {
+  if (angle === 0) return points;
+  return rotate(
+    points.map((pt) => point(-pt.y, pt.x)),
+    (angle - 90) as 0 | 90 | 180 | 270,
+  );
+}
+
+function canPlace(grid: Grid, points: Point[], ignorePoints: Point[] = []) {
+  return points
+    .filter((pt) => !ignorePoints.some((p) => pt.x === p.x && pt.y === p.y))
+    .every((pt) => grid.get(pt.x, pt.y) === 'blank');
 }
 
 abstract class AbstractGroup implements Group {
@@ -127,9 +152,9 @@ abstract class AbstractGroup implements Group {
       ymin ??= pt.y;
       ymax ??= pt.y;
       xmin = pt.x < xmin ? pt.x : xmin;
-      xmax = pt.x < xmax ? pt.x : xmax;
-      ymin = pt.x < ymin ? pt.x : ymin;
-      ymax = pt.x < ymax ? pt.x : ymax;
+      xmax = pt.x > xmax ? pt.x : xmax;
+      ymin = pt.y < ymin ? pt.y : ymin;
+      ymax = pt.y > ymax ? pt.y : ymax;
     });
     return { xmin, xmax, ymin, ymax };
   }
@@ -140,8 +165,8 @@ abstract class AbstractGroup implements Group {
     if (dx == dy) return { xmin, xmax, ymin, ymax };
     else if (dx < dy)
       return {
-        xmin: xmin + Math.floor(dy / 2),
-        xmax: xmax + Math.ceil(dy / 2),
+        xmin: xmin - Math.floor((dy - dx) / 2),
+        xmax: xmax + Math.ceil((dy - dx) / 2),
         ymin,
         ymax,
       };
@@ -149,31 +174,56 @@ abstract class AbstractGroup implements Group {
       return {
         xmin,
         xmax,
-        ymin: xmin + Math.floor(dx / 2),
-        ymax: xmax + Math.ceil(dx / 2),
+        ymin: ymin - Math.floor((dx - dy) / 2),
+        ymax: ymax + Math.ceil((dx - dy) / 2),
       };
   }
 
   canRotate(): boolean {
-    throw new Error('Method not implemented.');
+    return canPlace(
+      this.grid,
+      translate(rotate(this.points), this.position),
+      translate(this.points, this.position),
+    );
   }
 
   rotate(): void {
-    throw new Error('Method not implemented.');
+    if (!this.canRotate()) return;
+    const box = this.boundingSquare();
+    const size = box.xmax - box.xmin + 1;
+    this.remove();
+    this.points = translate(rotate(this.points), point(size - 1, 0));
+    this.spawn();
   }
 
   canSpawn(): boolean {
-    return pointsToSpawn(this.grid, this.points, this.position).canPlace;
+    return canPlace(this.grid, translate(this.points, this.position));
   }
 
   spawn(): void {
-    const { canPlace, points } = pointsToSpawn(
-      this.grid,
-      this.points,
-      this.position,
-    );
-    if (!canPlace) throw new Error('cannot spawn ' + this.name);
+    if (!this.canSpawn()) throw new Error('cannot spawn ' + this.name);
+    const points = translate(this.points, this.position);
     points.forEach((pt) => this.grid.set(pt.x, pt.y, this.color));
+  }
+
+  remove(): void {
+    const points = translate(this.points, this.position);
+    points.forEach((pt) => this.grid.set(pt.x, pt.y, 'blank'));
+  }
+
+  canMove(x: number, y: number): boolean {
+    return canPlace(
+      this.grid,
+      translate(this.points, point(x, y)),
+      translate(this.points, this.position),
+    );
+  }
+
+  move(x: number, y: number): void {
+    if (!this.canMove(x, y)) return;
+    this.remove();
+    this.position = point(x, y);
+    this.spawn();
   }
 }
 
@@ -202,18 +252,31 @@ export class Tetris {
 
   left() {
     this.setCursor(this.cursor.x - 1, this.cursor.y);
+    this.currentGroup.move(
+      this.currentGroup.position.x - 1,
+      this.currentGroup.position.y,
+    );
   }
 
   right() {
     this.setCursor(this.cursor.x + 1, this.cursor.y);
+    this.currentGroup.move(
+      this.currentGroup.position.x + 1,
+      this.currentGroup.position.y,
+    );
   }
 
   up() {
     this.setCursor(this.cursor.x, this.cursor.y - 1);
+    this.currentGroup.rotate();
   }
 
   down() {
     this.setCursor(this.cursor.x, this.cursor.y + 1);
+    this.currentGroup.move(
+      this.currentGroup.position.x,
+      this.currentGroup.position.y + 1,
+    );
   }
 
   space() {
@@ -252,11 +315,11 @@ export function randomTetris() {
   console.log('creating a random tetris!');
   const grid = new Grid(10, 20);
   const batch = randomBatch();
-  const group = new GroupT(grid, point(4, 0));
+  const group = new GroupT(grid, point(3, 8));
   const tetris = new Tetris(
     grid,
     group,
-    'T',
+    group.name,
     null,
     false,
     batch,

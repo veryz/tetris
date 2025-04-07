@@ -125,7 +125,7 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
     yfactor,
   );
 
-  renderGroup(tetris, canvas);
+  // renderGroup(tetris, canvas);
 }
 
 function renderBatch(tetris: Tetris, canvas: HTMLCanvasElement) {
