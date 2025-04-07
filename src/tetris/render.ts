@@ -117,14 +117,6 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
     }
   }
 
-  ctx.fillStyle = 'brown';
-  ctx.fillRect(
-    tetris.cursor.x * xfactor,
-    tetris.cursor.y * yfactor,
-    xfactor,
-    yfactor,
-  );
-
   renderGroupProjection(tetris, canvas);
 }
 

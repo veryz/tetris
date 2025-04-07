@@ -329,7 +329,6 @@ export class Tetris {
     public memory: Piece | null,
     public usedMemory: boolean,
     public speed: number,
-    public cursor: { x: number; y: number },
   ) {
     // Start with a dummy group
     this.group = group('T', this.grid, point(0, 0));
@@ -356,17 +355,14 @@ export class Tetris {
   // BEGIN Player actions
 
   left() {
-    this.setCursor(this.cursor.x - 1, this.cursor.y);
     this.group.move(this.group.position.x - 1, this.group.position.y);
   }
 
   right() {
-    this.setCursor(this.cursor.x + 1, this.cursor.y);
     this.group.move(this.group.position.x + 1, this.group.position.y);
   }
 
   up() {
-    this.setCursor(this.cursor.x, this.cursor.y - 1);
     this.group.rotate();
   }
 
@@ -375,7 +371,6 @@ export class Tetris {
   }
 
   down() {
-    this.setCursor(this.cursor.x, this.cursor.y + 1);
     this.group.move(this.group.position.x, this.group.position.y + 1);
   }
 
@@ -396,7 +391,6 @@ export class Tetris {
   }
 
   space() {
-    this.setCursor(this.cursor.x, this.grid.h - 1);
     this.group.move(
       this.group.position.x,
       this.group.position.y + this.group.distance,
@@ -411,11 +405,9 @@ export class Tetris {
   // END Player actions
 
   tick() {
-    this.setCursor(this.cursor.x, Math.min(this.cursor.y + 1, this.grid.h - 1));
-  }
-
-  setCursor(x: number, y: number) {
-    this.cursor = { x, y };
+    if (this.group.canMove(this.group.position.x, this.group.position.y + 1))
+      this.group.move(this.group.position.x, this.group.position.y + 1);
+    else this.next();
   }
 
   nextPieces(n: number) {
@@ -444,6 +436,6 @@ export class Tetris {
 export function randomTetris() {
   console.log('creating a random tetris!');
   const grid = new Grid(10, 20);
-  const tetris = new Tetris(grid, null, false, 1, point(5, 10));
+  const tetris = new Tetris(grid, null, false, 1);
   return tetris;
 }
