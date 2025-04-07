@@ -1,15 +1,4 @@
-export type Color =
-  | 'red'
-  | 'blue'
-  | 'green'
-  | 'yellow'
-  | 'purple'
-  | 'orange'
-  | 'cyan'
-  | 'blank';
-
-function randomColor() {
-  const all = [
+export const COLORS = [
     'red',
     'blue',
     'green',
@@ -18,7 +7,11 @@ function randomColor() {
     'orange',
     'cyan',
     'blank',
-  ] satisfies Color[];
+];
+export type Color = (typeof COLORS)[number];
+
+function randomColor() {
+  const all = COLORS;
   return all[Math.floor(Math.random() * all.length)];
 }
 
