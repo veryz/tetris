@@ -112,7 +112,6 @@ function App() {
           </ul>
 
           <button onClick={generateTetris}>create a tetris!</button>
-          <button onClick={() => tetris?.next()}>next</button>
         </div>
       </div>
 

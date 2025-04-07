@@ -386,6 +386,8 @@ export class Tetris {
       .reduce((a, b) => Math.min(a, b));
 
     this.group.move(this.group.position.x, this.group.position.y + min);
+
+    this.next();
   }
 
   swap() {
