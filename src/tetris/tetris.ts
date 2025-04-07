@@ -1,4 +1,4 @@
-export const COLORS = [
+const COLORS = [
     'red',
     'blue',
     'green',
@@ -7,7 +7,7 @@ export const COLORS = [
     'orange',
     'cyan',
     'blank',
-];
+] as const;
 export type Color = (typeof COLORS)[number];
 
 function randomColor() {
@@ -68,7 +68,8 @@ export class Grid {
   }
 }
 
-export type Piece = 'L' | 'J' | 'I' | 'O' | 'S' | 'Z' | 'T';
+const PIECES = ['L', 'J', 'I', 'O', 'S', 'Z', 'T'] as const;
+export type Piece = (typeof PIECES)[number];
 
 export interface Point {
   x: number;
@@ -325,6 +326,14 @@ export class Tetris {
 
   setCursor(x: number, y: number) {
     this.cursor = { x, y };
+  }
+
+  get colors() {
+    return [...COLORS];
+  }
+
+  get pieces() {
+    return [...PIECES];
   }
 }
 
