@@ -97,21 +97,6 @@ export interface Group {
   move(x: number, y: number): void;
 }
 
-function pointsToSpawn(grid: Grid, points: Point[], origin: Point) {
-  const squares: Point[] = [];
-  const canPlace = points.every((pt) => {
-    const x = origin.x + pt.x;
-    const y = origin.y + pt.y;
-    const color = grid.get(x, y);
-    const free = color === 'blank';
-    if (!free) return false;
-    squares.push(point(x, y));
-    return true;
-  });
-
-  return { canPlace, points: squares };
-}
-
 function translate(points: Point[], vector: Vector) {
   return points.map((pt) => point(pt.x + vector.x, pt.y + vector.y));
 }
@@ -132,10 +117,17 @@ function canPlace(grid: Grid, points: Point[], ignorePoints: Point[] = []) {
     );
 }
 
+function raycast(grid: Grid, column: number, from: number) {
+  for (let y = from; y < grid.h; y++) {
+    if (grid.get(column, y) !== 'blank') return y;
+  }
+  return grid.h - 1;
+}
+
 abstract class AbstractGroup implements Group {
   constructor(
     public grid: Grid,
-    public points: Point[],
+    public relpoints: Point[],
     public position: Position,
     public name: Piece,
     public color: Color,
@@ -143,7 +135,7 @@ abstract class AbstractGroup implements Group {
 
   boundingBox() {
     let [xmin, xmax, ymin, ymax]: (number | undefined)[] = [];
-    this.points.forEach((pt) => {
+    this.relpoints.forEach((pt) => {
       xmin ??= pt.x;
       xmax ??= pt.x;
       ymin ??= pt.y;
@@ -183,10 +175,10 @@ abstract class AbstractGroup implements Group {
     return canPlace(
       this.grid,
       translate(
-        rotate(this.points),
+        rotate(this.relpoints),
         point(this.position.x + size - 1, this.position.y),
       ),
-      translate(this.points, this.position),
+      this.points,
     );
   }
 
@@ -196,30 +188,28 @@ abstract class AbstractGroup implements Group {
     const size = square.xmax - square.xmin + 1;
 
     this.remove();
-    this.points = translate(rotate(this.points), point(size - 1, 0));
+    this.relpoints = translate(rotate(this.relpoints), point(size - 1, 0));
     this.spawn();
   }
 
   canSpawn(): boolean {
-    return canPlace(this.grid, translate(this.points, this.position));
+    return canPlace(this.grid, this.points);
   }
 
   spawn(): void {
     if (!this.canSpawn()) throw new Error('cannot spawn ' + this.name);
-    const points = translate(this.points, this.position);
-    points.forEach((pt) => this.grid.set(pt.x, pt.y, this.color));
+    this.points.forEach((pt) => this.grid.set(pt.x, pt.y, this.color));
   }
 
   remove(): void {
-    const points = translate(this.points, this.position);
-    points.forEach((pt) => this.grid.set(pt.x, pt.y, 'blank'));
+    this.points.forEach((pt) => this.grid.set(pt.x, pt.y, 'blank'));
   }
 
   canMove(x: number, y: number): boolean {
     return canPlace(
       this.grid,
-      translate(this.points, point(x, y)),
-      translate(this.points, this.position),
+      translate(this.relpoints, point(x, y)),
+      this.points,
     );
   }
 
@@ -228,6 +218,10 @@ abstract class AbstractGroup implements Group {
     this.remove();
     this.position = point(x, y);
     this.spawn();
+  }
+
+  get points() {
+    return translate(this.relpoints, this.position);
   }
 }
 
@@ -280,31 +274,19 @@ class GroupZ extends AbstractGroup {
   }
 }
 
+const GROUPS: Record<Piece, { new (grid: Grid, position: Point): Group }> = {
+  L: GroupL,
+  J: GroupJ,
+  I: GroupI,
+  O: GroupO,
+  S: GroupS,
+  Z: GroupZ,
+  T: GroupT,
+};
+
 export function group(piece: Piece, grid: Grid, position: Point) {
-  let clazz = null;
-  switch (piece) {
-    case 'L':
-      clazz = GroupL;
-      break;
-    case 'J':
-      clazz = GroupJ;
-      break;
-    case 'I':
-      clazz = GroupI;
-      break;
-    case 'O':
-      clazz = GroupO;
-      break;
-    case 'S':
-      clazz = GroupS;
-      break;
-    case 'Z':
-      clazz = GroupZ;
-      break;
-    case 'T':
-      clazz = GroupT;
-      break;
-  }
+  const clazz = GROUPS[piece];
+  if (!clazz) throw new Error(`no group exists for piece ${piece}`);
   return new clazz(grid, position);
 }
 
@@ -371,14 +353,7 @@ export class Tetris {
       this.currentGroup.position,
     );
 
-    if (
-      !canPlace(
-        this.grid,
-        translate(next.points, next.position),
-        translate(this.currentGroup.points, this.currentGroup.position),
-      )
-    )
-      return;
+    if (!canPlace(this.grid, next.points, this.currentGroup.points)) return;
     this.currentGroup.remove();
     next.spawn();
     this.currentGroup = next;
@@ -386,23 +361,16 @@ export class Tetris {
 
   space() {
     this.setCursor(this.cursor.x, this.grid.h - 1);
-    const group = this.currentGroup;
-    const points = translate(group.points, group.position);
-    const lower = points.reduce((bound, pt) => {
+    const lower = this.currentGroup.points.reduce((bound, pt) => {
       const b = bound.get(pt.x);
       if (b == null || pt.y > b) bound.set(pt.x, pt.y);
       return bound;
     }, new Map<number, number>());
-    function highest(grid: Grid, column: number, from: number) {
-      for (let y = from; y < grid.h; y++) {
-        if (grid.get(column, y) !== 'blank') return y;
-      }
-      return grid.h - 1;
-    }
+
     const min = [...lower.entries()]
-      .map(([column, bound]) => highest(this.grid, column, bound + 1) - bound)
+      .map(([column, bound]) => raycast(this.grid, column, bound + 1) - bound)
       .reduce((a, b) => Math.min(a, b));
-    console.log(min);
+
     this.currentGroup.move(
       this.currentGroup.position.x,
       this.currentGroup.position.y + min,
