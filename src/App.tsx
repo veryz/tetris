@@ -97,13 +97,13 @@ function App() {
               Grid dim: {tetris?.grid.w} x {tetris?.grid.h}
             </li>
             <li>
-              Current: <code>{tetris?.currentPiece}</code>
+              Current: <code>{tetris?.currentGroup.name}</code>
             </li>
             <li>
               Memory: <code>{tetris?.memory ?? 'none'}</code>
             </li>
             <li>
-              Next pieces: <code>{tetris?.batch.join(' - ')}</code>
+              Next pieces: <code>{tetris?.nextPieces(5).join(' - ')}</code>
             </li>
             <li>Speed: {tetris?.speed}</li>
             <li>
@@ -112,6 +112,7 @@ function App() {
           </ul>
 
           <button onClick={generateTetris}>create a tetris!</button>
+          <button onClick={() => tetris?.next()}>next</button>
         </div>
       </div>
 

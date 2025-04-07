@@ -129,7 +129,7 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
 }
 
 function renderBatch(tetris: Tetris, canvas: HTMLCanvasElement) {
-  const sequence = tetris.batch.join('-');
+  const sequence = tetris.nextPieces(5).join('-');
   clearCanvas(canvas);
   renderSequence(sequence, canvas);
 }

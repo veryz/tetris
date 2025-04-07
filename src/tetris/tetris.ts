@@ -1,3 +1,5 @@
+import { BatchGenerator } from './generator';
+
 const COLORS = [
   'red',
   'blue',
@@ -83,6 +85,13 @@ function point(x: number, y: number): Point {
   return { x, y };
 }
 
+export interface Box {
+  xmin: number;
+  xmax: number;
+  ymin: number;
+  ymax: number;
+}
+
 export interface Group {
   name: Piece;
   grid: Grid;
@@ -95,6 +104,7 @@ export interface Group {
   remove(): void;
   canMove(x: number, y: number): boolean;
   move(x: number, y: number): void;
+  boundingBox(): Box;
 }
 
 function translate(points: Point[], vector: Vector) {
@@ -131,7 +141,7 @@ abstract class AbstractGroup implements Group {
     public color: Color,
   ) {}
 
-  boundingBox() {
+  boundingBox(): Box {
     let [xmin, xmax, ymin, ymax]: (number | undefined)[] = [];
     this.relpoints.forEach(pt => {
       xmin ??= pt.x;
@@ -146,7 +156,7 @@ abstract class AbstractGroup implements Group {
     return { xmin, xmax, ymin, ymax };
   }
 
-  boundingSquare() {
+  boundingSquare(): Box {
     const { xmin, xmax, ymin, ymax } = this.boundingBox();
     const [dx, dy] = [xmax - xmin + 1, ymax - ymin + 1];
     if (dx == dy) return { xmin, xmax, ymin, ymax };
@@ -289,77 +299,83 @@ export function group(piece: Piece, grid: Grid, position: Point) {
 }
 
 export class Tetris {
+  private generator = new BatchGenerator<Piece>(this.pieces);
+  private group: Group;
+
   constructor(
     public grid: Grid,
-    public currentGroup: Group,
-    public currentPiece: Piece,
     public memory: Piece | null,
     public usedMemory: boolean,
-    public batch: Piece[],
     public speed: number,
     public cursor: { x: number; y: number },
   ) {
-    currentGroup.spawn();
+    // Start with a dummy group
+    this.group = group('T', this.grid, point(0, 0));
+    this.init();
+  }
+
+  init() {
+    this.next();
+  }
+
+  next() {
+    const g = group(this.generator.pop(), this.grid, point(0, 0));
+    const box = g.boundingBox();
+    const dx = Math.floor((this.grid.w - (box.xmax - box.xmin + 1)) / 2);
+    g.position = translate([g.position], point(dx, 0))[0];
+    if (g.canSpawn()) {
+      g.spawn();
+      this.group = g;
+    } else {
+      console.log('you lost!');
+    }
   }
 
   // BEGIN Player actions
 
   left() {
     this.setCursor(this.cursor.x - 1, this.cursor.y);
-    this.currentGroup.move(
-      this.currentGroup.position.x - 1,
-      this.currentGroup.position.y,
-    );
+    this.group.move(this.group.position.x - 1, this.group.position.y);
   }
 
   right() {
     this.setCursor(this.cursor.x + 1, this.cursor.y);
-    this.currentGroup.move(
-      this.currentGroup.position.x + 1,
-      this.currentGroup.position.y,
-    );
+    this.group.move(this.group.position.x + 1, this.group.position.y);
   }
 
   up() {
     this.setCursor(this.cursor.x, this.cursor.y - 1);
-    this.currentGroup.rotate();
+    this.group.rotate();
   }
 
   shiftUp() {
-    this.currentGroup.move(
-      this.currentGroup.position.x,
-      this.currentGroup.position.y - 1,
-    );
+    this.group.move(this.group.position.x, this.group.position.y - 1);
   }
 
   down() {
     this.setCursor(this.cursor.x, this.cursor.y + 1);
-    this.currentGroup.move(
-      this.currentGroup.position.x,
-      this.currentGroup.position.y + 1,
-    );
+    this.group.move(this.group.position.x, this.group.position.y + 1);
   }
 
   cycle() {
     const pieces = this.pieces;
     const next = group(
       pieces[
-        (1 + pieces.findIndex(p => p === this.currentGroup.name)) %
-          pieces.length
+        (1 + pieces.findIndex(p => p === this.group.name)) % pieces.length
       ],
       this.grid,
-      this.currentGroup.position,
+      this.group.position,
     );
 
-    if (!canPlace(this.grid, next.points, this.currentGroup.points)) return;
-    this.currentGroup.remove();
+    if (!canPlace(this.grid, next.points, this.group.points)) return;
+    this.group.remove();
     next.spawn();
-    this.currentGroup = next;
+    this.group = next;
   }
 
   space() {
     this.setCursor(this.cursor.x, this.grid.h - 1);
-    const lower = this.currentGroup.points.reduce((bound, pt) => {
+    const lower = this.group.points.reduce((bound, pt) => {
       const b = bound.get(pt.x);
       if (b == null || pt.y > b) bound.set(pt.x, pt.y);
       return bound;
@@ -369,10 +385,7 @@ export class Tetris {
       .map(([column, bound]) => raycast(this.grid, column, bound + 1) - bound)
       .reduce((a, b) => Math.min(a, b));
 
-    this.currentGroup.move(
-      this.currentGroup.position.x,
-      this.currentGroup.position.y + min,
-    );
+    this.group.move(this.group.position.x, this.group.position.y + min);
   }
 
   swap() {
@@ -389,42 +402,32 @@ export class Tetris {
     this.cursor = { x, y };
   }
 
-  get colors() {
+  nextPieces(n: number) {
+    return this.generator.predict(n);
+  }
+
+  get currentGroup() {
+    return this.group;
+  }
+
+  static get colors() {
     return [...COLORS];
   }
+  get colors() {
+    return Tetris.colors;
+  }
 
-  get pieces() {
+  static get pieces() {
     return [...PIECES];
   }
-}
-
-export function randomBatch(): Piece[] {
-  const batch: Piece[] = [];
-  const all = ['L', 'J', 'I', 'O', 'S', 'Z', 'T'] satisfies Piece[];
-
-  while (all.length > 0) {
-    const i = Math.floor(Math.random() * all.length);
-    const x = all.splice(i, 1)[0];
-    batch.push(x);
+  get pieces() {
+    return Tetris.pieces;
   }
-
-  return batch;
 }
 
 export function randomTetris() {
   console.log('creating a random tetris!');
   const grid = new Grid(10, 20);
-  const batch = randomBatch();
-  const group = new GroupT(grid, point(3, 8));
-  const tetris = new Tetris(
-    grid,
-    group,
-    group.name,
-    null,
-    false,
-    batch,
-    1,
-    point(5, 10),
-  );
+  const tetris = new Tetris(grid, null, false, 1, point(5, 10));
   return tetris;
 }
