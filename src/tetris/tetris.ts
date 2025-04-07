@@ -281,6 +281,27 @@ export class Tetris {
 
   space() {
     this.setCursor(this.cursor.x, this.grid.h - 1);
+    const group = this.currentGroup;
+    const points = translate(group.points, group.position);
+    const lower = points.reduce((bound, pt) => {
+      const b = bound.get(pt.x);
+      if (b == null || pt.y > b) bound.set(pt.x, pt.y);
+      return bound;
+    }, new Map<number, number>());
+    function highest(grid: Grid, column: number, from: number) {
+      for (let y = from; y < grid.h; y++) {
+        if (grid.get(column, y) !== 'blank') return y;
+      }
+      return grid.h - 1;
+    }
+    const min = [...lower.entries()]
+      .map(([column, bound]) => highest(this.grid, column, bound + 1) - bound)
+      .reduce((a, b) => Math.min(a, b));
+    console.log(min);
+    this.currentGroup.move(
+      this.currentGroup.position.x,
+      this.currentGroup.position.y + min,
+    );
   }
 
   swap() {
