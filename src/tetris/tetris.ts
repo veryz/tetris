@@ -98,23 +98,21 @@ export interface Group {
 }
 
 function translate(points: Point[], vector: Vector) {
-  return points.map((pt) => point(pt.x + vector.x, pt.y + vector.y));
+  return points.map(pt => point(pt.x + vector.x, pt.y + vector.y));
 }
 
 function rotate(points: Point[], angle: 0 | 90 | 180 | 270 = 90) {
   if (angle === 0) return points;
   return rotate(
-    points.map((pt) => point(-pt.y, pt.x)),
+    points.map(pt => point(-pt.y, pt.x)),
     (angle - 90) as 0 | 90 | 180 | 270,
   );
 }
 
 function canPlace(grid: Grid, points: Point[], ignorePoints: Point[] = []) {
   return points
-    .filter((pt) => !ignorePoints.some((p) => pt.x === p.x && pt.y === p.y))
-    .every(
-      (pt) => grid.isValid(pt.x, pt.y) && grid.get(pt.x, pt.y) === 'blank',
-    );
+    .filter(pt => !ignorePoints.some(p => pt.x === p.x && pt.y === p.y))
+    .every(pt => grid.isValid(pt.x, pt.y) && grid.get(pt.x, pt.y) === 'blank');
 }
 
 function raycast(grid: Grid, column: number, from: number) {
@@ -135,7 +133,7 @@ abstract class AbstractGroup implements Group {
 
   boundingBox() {
     let [xmin, xmax, ymin, ymax]: (number | undefined)[] = [];
-    this.relpoints.forEach((pt) => {
+    this.relpoints.forEach(pt => {
       xmin ??= pt.x;
       xmax ??= pt.x;
       ymin ??= pt.y;
@@ -198,11 +196,11 @@ abstract class AbstractGroup implements Group {
 
   spawn(): void {
     if (!this.canSpawn()) throw new Error('cannot spawn ' + this.name);
-    this.points.forEach((pt) => this.grid.set(pt.x, pt.y, this.color));
+    this.points.forEach(pt => this.grid.set(pt.x, pt.y, this.color));
   }
 
   remove(): void {
-    this.points.forEach((pt) => this.grid.set(pt.x, pt.y, 'blank'));
+    this.points.forEach(pt => this.grid.set(pt.x, pt.y, 'blank'));
   }
 
   canMove(x: number, y: number): boolean {
@@ -346,7 +344,7 @@ export class Tetris {
     const pieces = this.pieces;
     const next = group(
       pieces[
-        (1 + pieces.findIndex((p) => p === this.currentGroup.name)) %
+        (1 + pieces.findIndex(p => p === this.currentGroup.name)) %
           pieces.length
       ],
       this.grid,

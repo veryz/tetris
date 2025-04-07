@@ -93,7 +93,7 @@ function renderGroup(tetris: Tetris, canvas: HTMLCanvasElement) {
   const yfactor = canvas.height / tetris.grid.h;
 
   const group = tetris.currentGroup;
-  group.points.forEach((pt) => {
+  group.points.forEach(pt => {
     const color = tetris.grid.get(pt.x, pt.y);
     ctx.fillStyle = color2rgb(color);
     ctx.fillRect(pt.x * xfactor, pt.y * yfactor, xfactor, yfactor);
