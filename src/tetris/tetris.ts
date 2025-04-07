@@ -1,12 +1,12 @@
 const COLORS = [
-    'red',
-    'blue',
-    'green',
-    'yellow',
-    'purple',
-    'orange',
-    'cyan',
-    'blank',
+  'red',
+  'blue',
+  'green',
+  'yellow',
+  'purple',
+  'orange',
+  'cyan',
+  'blank',
 ] as const;
 export type Color = (typeof COLORS)[number];
 
@@ -358,6 +358,30 @@ export class Tetris {
       this.currentGroup.position.x,
       this.currentGroup.position.y + 1,
     );
+  }
+
+  cycle() {
+    const pieces = this.pieces;
+    const next = group(
+      pieces[
+        (1 + pieces.findIndex((p) => p === this.currentGroup.name)) %
+          pieces.length
+      ],
+      this.grid,
+      this.currentGroup.position,
+    );
+
+    if (
+      !canPlace(
+        this.grid,
+        translate(next.points, next.position),
+        translate(this.currentGroup.points, this.currentGroup.position),
+      )
+    )
+      return;
+    this.currentGroup.remove();
+    next.spawn();
+    this.currentGroup = next;
   }
 
   space() {

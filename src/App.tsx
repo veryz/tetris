@@ -64,7 +64,16 @@ function App() {
       case 'KeyC':
         tetris.swap();
         break;
+
+      case 'Tab':
+        tetris.cycle();
+        break;
+
+      default:
+        return;
     }
+
+    event.preventDefault();
 
     update(tetris);
   }
