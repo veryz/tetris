@@ -69,6 +69,10 @@ function App() {
         tetris.cycle();
         break;
 
+      case 'KeyR':
+        generateTetris();
+        return;
+
       default:
         return;
     }
