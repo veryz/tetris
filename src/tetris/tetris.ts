@@ -105,6 +105,8 @@ export interface Group {
   canMove(x: number, y: number): boolean;
   move(x: number, y: number): void;
   boundingBox(): Box;
+  projected: Point[];
+  distance: number;
 }
 
 function translate(points: Point[], vector: Vector) {
@@ -129,7 +131,7 @@ function raycast(grid: Grid, column: number, from: number) {
   for (let y = from; y < grid.h; y++) {
     if (grid.get(column, y) !== 'blank') return y;
   }
-  return grid.h - 1;
+  return grid.h;
 }
 
 abstract class AbstractGroup implements Group {
@@ -230,6 +232,26 @@ abstract class AbstractGroup implements Group {
 
   get points() {
     return translate(this.relpoints, this.position);
+  }
+
+  get distance() {
+    const lower = this.points.reduce((bound, pt) => {
+      const b = bound.get(pt.x);
+      if (b == null || pt.y > b) bound.set(pt.x, pt.y);
+      return bound;
+    }, new Map<number, number>());
+
+    const min = [...lower.entries()]
+      .map(
+        ([column, bound]) => raycast(this.grid, column, bound + 1) - bound - 1,
+      )
+      .reduce((a, b) => Math.min(a, b));
+
+    return Math.max(0, min);
+  }
+
+  get projected() {
+    return translate(this.points, point(0, this.distance));
   }
 }
 
@@ -375,18 +397,10 @@ export class Tetris {
 
   space() {
     this.setCursor(this.cursor.x, this.grid.h - 1);
-    const lower = this.group.points.reduce((bound, pt) => {
-      const b = bound.get(pt.x);
-      if (b == null || pt.y > b) bound.set(pt.x, pt.y);
-      return bound;
-    }, new Map<number, number>());
-
-    const min = [...lower.entries()]
-      .map(([column, bound]) => raycast(this.grid, column, bound + 1) - bound)
-      .reduce((a, b) => Math.min(a, b));
-
-    this.group.move(this.group.position.x, this.group.position.y + min);
-
+    this.group.move(
+      this.group.position.x,
+      this.group.position.y + this.group.distance,
+    );
     this.next();
   }
 
