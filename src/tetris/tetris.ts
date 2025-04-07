@@ -323,11 +323,11 @@ export function group(piece: Piece, grid: Grid, position: Point) {
 export class Tetris {
   private generator = new BatchGenerator<Piece>(this.pieces);
   private group: Group;
+  public memory: Piece | null = null;
+  public usedMemory: boolean = false;
 
   constructor(
     public grid: Grid,
-    public memory: Piece | null,
-    public usedMemory: boolean,
     public speed: number,
   ) {
     // Start with a dummy group
@@ -340,10 +340,26 @@ export class Tetris {
   }
 
   next() {
-    const g = group(this.generator.pop(), this.grid, point(0, 0));
+    // Clear lines
+
+    // Clear memory
+    this.usedMemory = false;
+
+    // Spawn piece
+    const piece = this.generator.pop();
+    this.spawn(piece);
+  }
+
+  spawn(piece: Piece) {
+    // Create piece
+    const g = group(piece, this.grid, point(0, 0));
+
+    // Move piece to the center
     const box = g.boundingBox();
     const dx = Math.floor((this.grid.w - (box.xmax - box.xmin + 1)) / 2);
     g.position = translate([g.position], point(dx, 0))[0];
+
+    // Spawn piece
     if (g.canSpawn()) {
       g.spawn();
       this.group = g;
@@ -399,7 +415,13 @@ export class Tetris {
   }
 
   swap() {
-    throw new Error('swap not implemented');
+    if (this.usedMemory) return;
+
+    const piece = this.memory;
+    this.group.remove();
+    this.memory = this.group.name;
+    this.usedMemory = true;
+    this.spawn(piece ?? this.generator.pop());
   }
 
   // END Player actions
@@ -436,6 +458,6 @@ export class Tetris {
 export function randomTetris() {
   console.log('creating a random tetris!');
   const grid = new Grid(10, 20);
-  const tetris = new Tetris(grid, null, false, 1);
+  const tetris = new Tetris(grid, 1);
   return tetris;
 }
