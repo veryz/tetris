@@ -273,6 +273,13 @@ export class Tetris {
     this.currentGroup.rotate();
   }
 
+  shiftUp() {
+    this.currentGroup.move(
+      this.currentGroup.position.x,
+      this.currentGroup.position.y - 1,
+    );
+  }
+
   down() {
     this.setCursor(this.cursor.x, this.cursor.y + 1);
     this.currentGroup.move(

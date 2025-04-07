@@ -41,7 +41,8 @@ function App() {
 
     switch (event.code) {
       case 'ArrowUp':
-        tetris.up();
+        if (event.shiftKey) tetris.shiftUp();
+        else tetris.up();
         break;
 
       case 'ArrowDown':
