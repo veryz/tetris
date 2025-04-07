@@ -48,7 +48,7 @@ export class Grid {
   }
 
   isValid(x: number, y: number) {
-    return 0 <= x && x <= this.w && 0 <= y && y <= this.h;
+    return 0 <= x && x < this.w && 0 <= y && y < this.h;
   }
 
   private validate(x: number, y: number) {
@@ -125,7 +125,9 @@ function rotate(points: Point[], angle: 0 | 90 | 180 | 270 = 90) {
 function canPlace(grid: Grid, points: Point[], ignorePoints: Point[] = []) {
   return points
     .filter((pt) => !ignorePoints.some((p) => pt.x === p.x && pt.y === p.y))
-    .every((pt) => grid.get(pt.x, pt.y) === 'blank');
+    .every(
+      (pt) => grid.isValid(pt.x, pt.y) && grid.get(pt.x, pt.y) === 'blank',
+    );
 }
 
 abstract class AbstractGroup implements Group {
@@ -173,17 +175,24 @@ abstract class AbstractGroup implements Group {
   }
 
   canRotate(): boolean {
+    const square = this.boundingSquare();
+    const size = square.xmax - square.xmin + 1;
+
     return canPlace(
       this.grid,
-      translate(rotate(this.points), this.position),
+      translate(
+        rotate(this.points),
+        point(this.position.x + size - 1, this.position.y),
+      ),
       translate(this.points, this.position),
     );
   }
 
   rotate(): void {
     if (!this.canRotate()) return;
-    const box = this.boundingSquare();
-    const size = box.xmax - box.xmin + 1;
+    const square = this.boundingSquare();
+    const size = square.xmax - square.xmin + 1;
+
     this.remove();
     this.points = translate(rotate(this.points), point(size - 1, 0));
     this.spawn();
