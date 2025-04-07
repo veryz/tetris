@@ -84,6 +84,7 @@ function point(x: number, y: number): Point {
 }
 
 export interface Group {
+  name: Piece;
   grid: Grid;
   points: Point[];
   position: Position;
@@ -235,6 +236,76 @@ class GroupT extends AbstractGroup {
     const points = [point(1, 0), point(0, 1), point(1, 1), point(2, 1)];
     super(grid, points, position, 'T', 'purple');
   }
+}
+
+class GroupI extends AbstractGroup {
+  constructor(grid: Grid, position: Point) {
+    const points = [point(1, 0), point(1, 1), point(1, 2), point(1, 3)];
+    super(grid, points, position, 'I', 'cyan');
+  }
+}
+
+class GroupL extends AbstractGroup {
+  constructor(grid: Grid, position: Point) {
+    const points = [point(2, 0), point(0, 1), point(1, 1), point(2, 1)];
+    super(grid, points, position, 'L', 'orange');
+  }
+}
+
+class GroupJ extends AbstractGroup {
+  constructor(grid: Grid, position: Point) {
+    const points = [point(0, 0), point(0, 1), point(1, 1), point(2, 1)];
+    super(grid, points, position, 'J', 'blue');
+  }
+}
+
+class GroupO extends AbstractGroup {
+  constructor(grid: Grid, position: Point) {
+    const points = [point(0, 0), point(1, 0), point(0, 1), point(1, 1)];
+    super(grid, points, position, 'O', 'yellow');
+  }
+}
+
+class GroupS extends AbstractGroup {
+  constructor(grid: Grid, position: Point) {
+    const points = [point(1, 0), point(2, 0), point(0, 1), point(1, 1)];
+    super(grid, points, position, 'S', 'green');
+  }
+}
+
+class GroupZ extends AbstractGroup {
+  constructor(grid: Grid, position: Point) {
+    const points = [point(0, 0), point(1, 0), point(1, 1), point(2, 1)];
+    super(grid, points, position, 'Z', 'red');
+  }
+}
+
+export function group(piece: Piece, grid: Grid, position: Point) {
+  let clazz = null;
+  switch (piece) {
+    case 'L':
+      clazz = GroupL;
+      break;
+    case 'J':
+      clazz = GroupJ;
+      break;
+    case 'I':
+      clazz = GroupI;
+      break;
+    case 'O':
+      clazz = GroupO;
+      break;
+    case 'S':
+      clazz = GroupS;
+      break;
+    case 'Z':
+      clazz = GroupZ;
+      break;
+    case 'T':
+      clazz = GroupT;
+      break;
+  }
+  return new clazz(grid, position);
 }
 
 export class Tetris {
