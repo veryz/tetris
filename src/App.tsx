@@ -5,7 +5,6 @@ import { render } from './tetris/render';
 
 function App() {
   const [tetris, setTetris] = useState<Tetris | undefined>();
-  const [textTetris, setTextTetris] = useState<string | undefined>(undefined);
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
   const [ticker, setTicker] = useState<number | undefined>();
 
@@ -26,7 +25,6 @@ function App() {
     const tetris = randomTetris();
 
     setTetris(tetris);
-    setTextTetris(JSON.stringify(tetris, null, 2));
 
     update(tetris);
 
@@ -118,8 +116,6 @@ function App() {
           <button onClick={generateTetris}>create a tetris!</button>
         </div>
       </div>
-
-      {/* <pre>{textTetris}</pre> */}
     </>
   );
 }
