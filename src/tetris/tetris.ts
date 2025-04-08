@@ -53,6 +53,33 @@ export class Grid {
     return 0 <= x && x < this.w && 0 <= y && y < this.h;
   }
 
+  isLine(y: number) {
+    this.validate(0, y);
+    return [...new Array(this.w)].every((_, i) => this.grid[i][y] !== 'blank');
+  }
+
+  clearLines() {
+    for (
+      let insert = this.h - 1, scan = this.h - 1;
+      insert >= 0 && scan >= 0;
+      scan--
+    ) {
+      if (this.isLine(scan)) {
+        [...new Array(this.w)].forEach(
+          (_, i) => (this.grid[i][scan] = 'blank'),
+        );
+      } else if (insert !== scan) {
+        [...new Array(this.w)].forEach(
+          (_, i) => (
+            (this.grid[i][insert] = this.grid[i][scan]),
+            (this.grid[i][scan] = 'blank')
+          ),
+        );
+        insert--;
+      } else insert--;
+    }
+  }
+
   private validate(x: number, y: number) {
     if (this.isValid(x, y)) return;
     throw new Error('out of bounds');
@@ -341,6 +368,7 @@ export class Tetris {
 
   next() {
     // Clear lines
+    this.grid.clearLines();
 
     // Clear memory
     this.usedMemory = false;
