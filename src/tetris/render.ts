@@ -126,11 +126,19 @@ function renderBatch(tetris: Tetris, canvas: HTMLCanvasElement) {
   renderSequence(sequence, canvas);
 }
 
+function renderMemory(tetris: Tetris, canvas: HTMLCanvasElement) {
+  clearCanvas(canvas);
+  if (tetris.memory == null) return;
+  renderElement(piece2element(tetris.memory), canvas, 0);
+}
+
 export function render(
   tetris: Tetris,
   game: HTMLCanvasElement,
   batch: HTMLCanvasElement,
+  memory: HTMLCanvasElement,
 ) {
   renderGame(tetris, game);
   renderBatch(tetris, batch);
+  renderMemory(tetris, memory);
 }

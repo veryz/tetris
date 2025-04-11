@@ -13,7 +13,8 @@ function App() {
 
     const gameCanvas = document.getElementById('tetris') as HTMLCanvasElement;
     const batchCanvas = document.getElementById('batch') as HTMLCanvasElement;
-    render(tetris, gameCanvas, batchCanvas);
+    const memoryCanvas = document.getElementById('memory') as HTMLCanvasElement;
+    render(tetris, gameCanvas, batchCanvas, memoryCanvas);
   }
 
   function tick(tetris: Tetris) {
@@ -83,6 +84,8 @@ function App() {
   return (
     <>
       <div id="game">
+        <canvas id="memory" width="120" height="60"></canvas>
+
         <canvas
           id="tetris"
           width="300"
