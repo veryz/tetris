@@ -94,7 +94,7 @@ function App() {
           onKeyDown={handleInput}
         ></canvas>
 
-        <canvas id="batch" width="90" height="570"></canvas>
+        <canvas id="batch" width="120" height="570"></canvas>
 
         <div id="panel">
           <ul id="debug">
