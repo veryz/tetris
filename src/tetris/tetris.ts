@@ -206,27 +206,21 @@ abstract class AbstractGroup implements Group {
   }
 
   canRotate(): boolean {
-    const square = this.boundingSquare();
-    const size = square.xmax - square.xmin + 1;
+    return this.transform(({ relative }) => {
+      const square = this.boundingSquare();
+      const size = square.xmax - square.xmin + 1;
 
-    return canPlace(
-      this.grid,
-      translate(
-        rotate(this.relpoints),
-        point(this.position.x + size - 1, this.position.y),
-      ),
-      this.points,
-    );
+      return { relative: translate(rotate(relative), point(size - 1, 0)) };
+    }, true);
   }
 
   rotate(): void {
-    if (!this.canRotate()) return;
-    const square = this.boundingSquare();
-    const size = square.xmax - square.xmin + 1;
+    this.transform(({ relative }) => {
+      const square = this.boundingSquare();
+      const size = square.xmax - square.xmin + 1;
 
-    this.remove();
-    this.relpoints = translate(rotate(this.relpoints), point(size - 1, 0));
-    this.spawn();
+      return { relative: translate(rotate(relative), point(size - 1, 0)) };
+    }, false);
   }
 
   canSpawn(): boolean {
@@ -243,18 +237,40 @@ abstract class AbstractGroup implements Group {
   }
 
   canMove(x: number, y: number): boolean {
-    return canPlace(
-      this.grid,
-      translate(this.relpoints, point(x, y)),
-      this.points,
-    );
+    return this.transform(() => ({ origin: point(x, y) }), true);
   }
 
   move(x: number, y: number): void {
-    if (!this.canMove(x, y)) return;
-    this.remove();
-    this.position = point(x, y);
-    this.spawn();
+    this.transform(() => ({ origin: point(x, y) }), false);
+  }
+
+  transform(
+    fn: (initial: { origin: Point; relative: Point[] }) => {
+      origin?: Point;
+      relative?: Point[];
+    },
+    simulate: boolean,
+  ): boolean {
+    const {
+      origin: position = this.position,
+      relative: points = this.relpoints,
+    } = fn({
+      origin: this.position,
+      relative: this.relpoints,
+    });
+    const grid = this.grid;
+    const curr = this.points;
+    const next = translate(points, position);
+    if (!canPlace(grid, next, curr)) return false;
+
+    if (!simulate) {
+      this.remove();
+      this.position = point(position.x, position.y);
+      this.relpoints = points.map(p => point(p.x, p.y));
+      this.spawn();
+    }
+
+    return true;
   }
 
   get points() {
