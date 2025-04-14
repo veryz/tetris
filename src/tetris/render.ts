@@ -117,7 +117,9 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
     }
   }
 
-  renderGroupProjection(tetris, canvas);
+  if (!tetris.finished) {
+    renderGroupProjection(tetris, canvas);
+  }
 }
 
 function renderBatch(tetris: Tetris, canvas: HTMLCanvasElement) {

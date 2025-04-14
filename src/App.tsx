@@ -7,6 +7,7 @@ function App() {
   const [tetris, setTetris] = useState<Tetris | undefined>();
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
   const [ticker, setTicker] = useState<number | undefined>();
+  const [status, setStatus] = useState<string | undefined>('init');
 
   function update(tetris: Tetris) {
     if (!tetris) return;
@@ -15,6 +16,12 @@ function App() {
     const batchCanvas = document.getElementById('batch') as HTMLCanvasElement;
     const memoryCanvas = document.getElementById('memory') as HTMLCanvasElement;
     render(tetris, gameCanvas, batchCanvas, memoryCanvas);
+
+    if (tetris.finished) {
+      clearInterval(ticker);
+      setTicker(() => undefined);
+      setStatus(() => 'finished');
+    }
   }
 
   function tick(tetris: Tetris) {
@@ -32,6 +39,8 @@ function App() {
     clearInterval(ticker);
     const nextTicker = setInterval(() => tick(tetris), 1000);
     setTicker(nextTicker);
+
+    setStatus(() => 'playing');
   }
 
   function handleInput(event: KeyboardEvent<HTMLCanvasElement>) {
@@ -98,6 +107,9 @@ function App() {
 
         <div id="panel">
           <ul id="debug">
+            <li>
+              Status: <code>{status}</code>
+            </li>
             <li>
               Grid dim: {tetris?.grid.w} x {tetris?.grid.h}
             </li>

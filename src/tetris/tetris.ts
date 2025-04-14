@@ -58,6 +58,14 @@ export class Grid {
     return [...new Array(this.w)].every((_, i) => this.grid[i][y] !== 'blank');
   }
 
+  clear() {
+    for (let x = 0; x < this.grid.length; x++) {
+      for (let y = 0; y < this.grid[x].length; y++) {
+        this.grid[x][y] = 'blank';
+      }
+    }
+  }
+
   clearLines() {
     for (
       let insert = this.h - 1, scan = this.h - 1;
@@ -128,6 +136,8 @@ export interface Group {
   rotate(): void;
   canSpawn(): boolean;
   spawn(): void;
+  fill(): void;
+  overwrite(): void;
   remove(): void;
   canMove(x: number, y: number): boolean;
   move(x: number, y: number): void;
@@ -229,6 +239,17 @@ abstract class AbstractGroup implements Group {
 
   spawn(): void {
     if (!this.canSpawn()) throw new Error('cannot spawn ' + this.name);
+    this.points.forEach(pt => this.grid.set(pt.x, pt.y, this.color));
+  }
+
+  fill(): void {
+    this.points.forEach(pt => {
+      if (this.grid.get(pt.x, pt.y) === 'blank')
+        this.grid.set(pt.x, pt.y, this.color);
+    });
+  }
+
+  overwrite(): void {
     this.points.forEach(pt => this.grid.set(pt.x, pt.y, this.color));
   }
 
@@ -363,11 +384,24 @@ export function group(piece: Piece, grid: Grid, position: Point) {
   return new clazz(grid, position);
 }
 
+interface Controller {
+  left(): void;
+  right(): void;
+  up(): void;
+  down(): void;
+  shiftUp(): void;
+  cycle(): void;
+  space(): void;
+  swap(): void;
+}
+
 export class Tetris {
   private generator = new BatchGenerator<Piece>(this.pieces);
   private group: Group;
   public memory: Piece | null = null;
   public usedMemory: boolean = false;
+  public finished: boolean = false;
+  private controller: Controller;
 
   constructor(
     public grid: Grid,
@@ -376,6 +410,8 @@ export class Tetris {
     // Start with a dummy group
     this.group = group('T', this.grid, point(0, 0));
     this.init();
+
+    this.controller = this.gameControls;
   }
 
   init() {
@@ -390,7 +426,7 @@ export class Tetris {
     this.usedMemory = false;
 
     // Spawn piece
-    const piece = this.generator.pop();
+    const piece = this.generator.peek();
     this.spawn(piece);
   }
 
@@ -407,68 +443,132 @@ export class Tetris {
     if (g.canSpawn()) {
       g.spawn();
       this.group = g;
+      this.generator.pop();
     } else {
-      console.log('you lost!');
+      g.overwrite();
+      this.finished = true;
+      this.controller = this.finishedControls;
     }
   }
 
+  left(): void {
+    this.controller.left();
+  }
+  right(): void {
+    this.controller.right();
+  }
+  up(): void {
+    this.controller.up();
+  }
+  down(): void {
+    this.controller.down();
+  }
+  shiftUp(): void {
+    this.controller.shiftUp();
+  }
+  cycle(): void {
+    this.controller.cycle();
+  }
+  space(): void {
+    this.controller.space();
+  }
+  swap(): void {
+    this.controller.swap();
+  }
+
   // BEGIN Player actions
+  gameControls = new (class implements Controller {
+    constructor(private tetris: Tetris) {}
 
-  left() {
-    this.group.move(this.group.position.x - 1, this.group.position.y);
-  }
+    left() {
+      this.tetris.group.move(
+        this.tetris.group.position.x - 1,
+        this.tetris.group.position.y,
+      );
+    }
 
-  right() {
-    this.group.move(this.group.position.x + 1, this.group.position.y);
-  }
+    right() {
+      this.tetris.group.move(
+        this.tetris.group.position.x + 1,
+        this.tetris.group.position.y,
+      );
+    }
 
-  up() {
-    this.group.rotate();
-  }
+    up() {
+      this.tetris.group.rotate();
+    }
 
-  shiftUp() {
-    this.group.move(this.group.position.x, this.group.position.y - 1);
-  }
+    shiftUp() {
+      this.tetris.group.move(
+        this.tetris.group.position.x,
+        this.tetris.group.position.y - 1,
+      );
+    }
 
-  down() {
-    this.group.move(this.group.position.x, this.group.position.y + 1);
-  }
+    down() {
+      this.tetris.group.move(
+        this.tetris.group.position.x,
+        this.tetris.group.position.y + 1,
+      );
+    }
 
-  cycle() {
-    const pieces = this.pieces;
-    const next = group(
-      pieces[
-        (1 + pieces.findIndex(p => p === this.group.name)) % pieces.length
-      ],
-      this.grid,
-      this.group.position,
-    );
+    cycle() {
+      const pieces = this.tetris.pieces;
+      const next = group(
+        pieces[
+          (1 + pieces.findIndex(p => p === this.tetris.group.name)) %
+            pieces.length
+        ],
+        this.tetris.grid,
+        this.tetris.group.position,
+      );
 
-    if (!canPlace(this.grid, next.points, this.group.points)) return;
-    this.group.remove();
-    next.spawn();
-    this.group = next;
-  }
+      if (!canPlace(this.tetris.grid, next.points, this.tetris.group.points))
+        return;
+      this.tetris.group.remove();
+      next.spawn();
+      this.tetris.group = next;
+    }
 
-  space() {
-    this.group.move(
-      this.group.position.x,
-      this.group.position.y + this.group.distance,
-    );
-    this.next();
-  }
+    space() {
+      this.tetris.group.move(
+        this.tetris.group.position.x,
+        this.tetris.group.position.y + this.tetris.group.distance,
+      );
+      this.tetris.next();
+    }
 
-  swap() {
-    if (this.usedMemory) return;
+    swap() {
+      if (this.tetris.usedMemory) return;
 
-    const piece = this.memory;
-    this.group.remove();
-    this.memory = this.group.name;
-    this.usedMemory = true;
-    this.spawn(piece ?? this.generator.pop());
-  }
-
+      const piece = this.tetris.memory;
+      this.tetris.group.remove();
+      this.tetris.memory = this.tetris.group.name;
+      this.tetris.usedMemory = true;
+      this.tetris.spawn(piece ?? this.tetris.generator.pop());
+    }
+  })(this);
   // END Player actions
+
+  // BEGIN Finished actions
+  finishedControls = new (class implements Controller {
+    constructor(private tetris: Tetris) {}
+    left(): void {}
+    right(): void {}
+    up(): void {}
+    down(): void {}
+    shiftUp(): void {}
+    cycle(): void {}
+    space(): void {}
+    swap(): void {}
+  })(this);
+  // END Finished actions
+
+  reset() {
+    this.grid.clear();
+    this.controller = this.gameControls;
+    this.finished = false;
+  }
 
   tick() {
     if (this.group.canMove(this.group.position.x, this.group.position.y + 1))
