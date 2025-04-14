@@ -94,7 +94,7 @@ function renderGroupProjection(tetris: Tetris, canvas: HTMLCanvasElement) {
 
   tetris.currentGroup.projected.forEach(pt => {
     const color = tetris.grid.get(pt.x, pt.y);
-    ctx.fillStyle = color2rgb(color);
+    if (color !== 'blank') return;
     ctx.fillStyle = 'magenta';
     ctx.fillRect(pt.x * xfactor, pt.y * yfactor, xfactor, yfactor);
   });
