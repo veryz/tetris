@@ -1,4 +1,4 @@
-import { KeyboardEvent, useState } from 'react';
+import { KeyboardEvent, useRef, useState } from 'react';
 import './App.css';
 import { randomTetris, Tetris } from './tetris/tetris';
 import { render } from './tetris/render';
@@ -8,13 +8,22 @@ function App() {
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<'init' | 'playing' | 'finished'>('init');
 
+  const gameCanvas = useRef<HTMLCanvasElement>(null);
+  const batchCanvas = useRef<HTMLCanvasElement>(null);
+  const memoryCanvas = useRef<HTMLCanvasElement>(null);
+
   function update(tetris: Tetris) {
     if (!tetris) return;
 
-    const gameCanvas = document.getElementById('tetris') as HTMLCanvasElement;
-    const batchCanvas = document.getElementById('batch') as HTMLCanvasElement;
-    const memoryCanvas = document.getElementById('memory') as HTMLCanvasElement;
-    render(tetris, gameCanvas, batchCanvas, memoryCanvas);
+    if (!(gameCanvas.current && batchCanvas.current && memoryCanvas.current))
+      return;
+
+    render(
+      tetris,
+      gameCanvas.current,
+      batchCanvas.current,
+      memoryCanvas.current,
+    );
 
     setStatus(() => (tetris.finished ? 'finished' : 'playing'));
   }
@@ -80,9 +89,10 @@ function App() {
   return (
     <>
       <div id="game">
-        <canvas id="memory" width="120" height="60"></canvas>
+        <canvas ref={memoryCanvas} id="memory" width="120" height="60"></canvas>
 
         <canvas
+          ref={gameCanvas}
           id="tetris"
           width="300"
           height="600"
@@ -90,7 +100,7 @@ function App() {
           onKeyDown={handleInput}
         ></canvas>
 
-        <canvas id="batch" width="120" height="570"></canvas>
+        <canvas ref={batchCanvas} id="batch" width="120" height="570"></canvas>
 
         <div id="panel">
           <ul id="debug">
