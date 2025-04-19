@@ -6,8 +6,7 @@ import { render } from './tetris/render';
 function App() {
   const [tetris, setTetris] = useState<Tetris | undefined>();
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
-  const [ticker, setTicker] = useState<number | undefined>();
-  const [status, setStatus] = useState<string | undefined>('init');
+  const [status, setStatus] = useState<'init' | 'playing' | 'finished'>('init');
 
   function update(tetris: Tetris) {
     if (!tetris) return;
@@ -17,30 +16,20 @@ function App() {
     const memoryCanvas = document.getElementById('memory') as HTMLCanvasElement;
     render(tetris, gameCanvas, batchCanvas, memoryCanvas);
 
-    if (tetris.finished) {
-      clearInterval(ticker);
-      setTicker(() => undefined);
-      setStatus(() => 'finished');
-    }
-  }
-
-  function tick(tetris: Tetris) {
-    tetris.tick();
-    update(tetris);
+    setStatus(() => (tetris.finished ? 'finished' : 'playing'));
   }
 
   function generateTetris() {
     const tetris = randomTetris();
 
-    setTetris(tetris);
+    setTetris(old => {
+      old?.stop();
+      return tetris;
+    });
 
-    update(tetris);
+    tetris.onUpdate(update);
 
-    clearInterval(ticker);
-    const nextTicker = setInterval(() => tick(tetris), 1000);
-    setTicker(nextTicker);
-
-    setStatus(() => 'playing');
+    tetris.start();
   }
 
   function handleInput(event: KeyboardEvent<HTMLCanvasElement>) {
@@ -86,8 +75,6 @@ function App() {
     }
 
     event.preventDefault();
-
-    update(tetris);
   }
 
   return (

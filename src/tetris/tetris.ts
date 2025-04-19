@@ -1,4 +1,5 @@
 import { BatchGenerator } from './generator';
+import { Ticker } from './ticker';
 
 const COLORS = [
   'red',
@@ -402,6 +403,8 @@ export class Tetris {
   public usedMemory: boolean = false;
   public finished: boolean = false;
   private controller: Controller;
+  private ticker = new Ticker();
+  private listeners: ((tetris: Tetris) => void)[] = [];
 
   constructor(
     public grid: Grid,
@@ -415,7 +418,25 @@ export class Tetris {
   }
 
   init() {
+    this.ticker.onTick(() => this.tick());
     this.next();
+  }
+
+  start() {
+    this.notify();
+    this.ticker.start(1000);
+  }
+
+  stop() {
+    this.ticker.stop();
+  }
+
+  onUpdate(fn: (tetris: Tetris) => void) {
+    this.listeners.push(fn);
+  }
+
+  notify() {
+    this.listeners.forEach(fn => fn(this));
   }
 
   next() {
@@ -448,7 +469,10 @@ export class Tetris {
       g.overwrite();
       this.finished = true;
       this.controller = this.finishedControls;
+      this.ticker.stop();
     }
+
+    this.notify();
   }
 
   left(): void {
@@ -485,6 +509,7 @@ export class Tetris {
         this.tetris.group.position.x - 1,
         this.tetris.group.position.y,
       );
+      this.tetris.notify();
     }
 
     right() {
@@ -492,10 +517,12 @@ export class Tetris {
         this.tetris.group.position.x + 1,
         this.tetris.group.position.y,
       );
+      this.tetris.notify();
     }
 
     up() {
       this.tetris.group.rotate();
+      this.tetris.notify();
     }
 
     shiftUp() {
@@ -503,6 +530,7 @@ export class Tetris {
         this.tetris.group.position.x,
         this.tetris.group.position.y - 1,
       );
+      this.tetris.notify();
     }
 
     down() {
@@ -510,6 +538,7 @@ export class Tetris {
         this.tetris.group.position.x,
         this.tetris.group.position.y + 1,
       );
+      this.tetris.notify();
     }
 
     cycle() {
@@ -528,6 +557,7 @@ export class Tetris {
       this.tetris.group.remove();
       next.spawn();
       this.tetris.group = next;
+      this.tetris.notify();
     }
 
     space() {
@@ -536,6 +566,7 @@ export class Tetris {
         this.tetris.group.position.y + this.tetris.group.distance,
       );
       this.tetris.next();
+      this.tetris.notify();
     }
 
     swap() {
@@ -546,13 +577,14 @@ export class Tetris {
       this.tetris.memory = this.tetris.group.name;
       this.tetris.usedMemory = true;
       this.tetris.spawn(piece ?? this.tetris.generator.pop());
+      this.tetris.notify();
     }
   })(this);
   // END Player actions
 
   // BEGIN Finished actions
   finishedControls = new (class implements Controller {
-    constructor(private tetris: Tetris) {}
+    constructor() {}
     left(): void {}
     right(): void {}
     up(): void {}
@@ -561,7 +593,7 @@ export class Tetris {
     cycle(): void {}
     space(): void {}
     swap(): void {}
-  })(this);
+  })();
   // END Finished actions
 
   reset() {
@@ -574,6 +606,7 @@ export class Tetris {
     if (this.group.canMove(this.group.position.x, this.group.position.y + 1))
       this.group.move(this.group.position.x, this.group.position.y + 1);
     else this.next();
+    this.notify();
   }
 
   nextPieces(n: number) {
