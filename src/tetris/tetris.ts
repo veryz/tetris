@@ -159,10 +159,67 @@ function rotate(points: Point[], angle: 0 | 90 | 180 | 270 = 90) {
   );
 }
 
+function boundingBox(points: Point[]) {
+  let [xmin, xmax, ymin, ymax]: (number | undefined)[] = [];
+  points.forEach(pt => {
+    xmin ??= pt.x;
+    xmax ??= pt.x;
+    ymin ??= pt.y;
+    ymax ??= pt.y;
+    xmin = pt.x < xmin ? pt.x : xmin;
+    xmax = pt.x > xmax ? pt.x : xmax;
+    ymin = pt.y < ymin ? pt.y : ymin;
+    ymax = pt.y > ymax ? pt.y : ymax;
+  });
+  return { xmin, xmax, ymin, ymax };
+}
+
+function boundingSquare(points: Point[]) {
+  const { xmin, xmax, ymin, ymax } = boundingBox(points);
+  const [dx, dy] = [xmax - xmin + 1, ymax - ymin + 1];
+  if (dx == dy) return { xmin, xmax, ymin, ymax };
+  else if (dx < dy)
+    return {
+      xmin: xmin - Math.floor((dy - dx) / 2),
+      xmax: xmax + Math.ceil((dy - dx) / 2),
+      ymin,
+      ymax,
+    };
+  else
+    return {
+      xmin,
+      xmax,
+      ymin: ymin - Math.floor((dx - dy) / 2),
+      ymax: ymax + Math.ceil((dx - dy) / 2),
+    };
+}
+
 function canPlace(grid: Grid, points: Point[], ignorePoints: Point[] = []) {
   return points
     .filter(pt => !ignorePoints.some(p => pt.x === p.x && pt.y === p.y))
     .every(pt => grid.isValid(pt.x, pt.y) && grid.get(pt.x, pt.y) === 'blank');
+}
+
+function findPlace(
+  grid: Grid,
+  points: Point[],
+  position: Point,
+  ignorePoints: Point[],
+) {
+  const box = boundingBox(points);
+
+  const leftDelta = -box.xmin;
+  const packLeft = translate(points, point(leftDelta, 0));
+  const rightDelta = grid.w - box.xmax - 1;
+  const packRight = translate(points, point(rightDelta, 0));
+
+  if (box.xmin < 0 && canPlace(grid, packLeft, ignorePoints)) {
+    return point(0, position.y);
+  } else if (box.xmax >= grid.w && canPlace(grid, packRight, ignorePoints)) {
+    return point(position.x + rightDelta, position.y);
+  }
+
+  return undefined;
 }
 
 function raycast(grid: Grid, column: number, from: number) {
@@ -170,6 +227,22 @@ function raycast(grid: Grid, column: number, from: number) {
     if (grid.get(column, y) !== 'blank') return y;
   }
   return grid.h;
+}
+
+function smartRotate(grid: Grid, points: Point[], position: Point) {
+  const box = boundingSquare(points);
+  const size = box.xmax - box.xmin + 1;
+
+  const rotated = translate(rotate(points), point(size - 1, 0));
+  const ignore = translate(points, position);
+  const origin = findPlace(
+    grid,
+    translate(rotated, position),
+    position,
+    ignore,
+  );
+
+  return { relative: rotated, origin };
 }
 
 abstract class AbstractGroup implements Group {
@@ -182,56 +255,25 @@ abstract class AbstractGroup implements Group {
   ) {}
 
   boundingBox(): Box {
-    let [xmin, xmax, ymin, ymax]: (number | undefined)[] = [];
-    this.relpoints.forEach(pt => {
-      xmin ??= pt.x;
-      xmax ??= pt.x;
-      ymin ??= pt.y;
-      ymax ??= pt.y;
-      xmin = pt.x < xmin ? pt.x : xmin;
-      xmax = pt.x > xmax ? pt.x : xmax;
-      ymin = pt.y < ymin ? pt.y : ymin;
-      ymax = pt.y > ymax ? pt.y : ymax;
-    });
-    return { xmin, xmax, ymin, ymax };
+    return boundingBox(this.relpoints);
   }
 
   boundingSquare(): Box {
-    const { xmin, xmax, ymin, ymax } = this.boundingBox();
-    const [dx, dy] = [xmax - xmin + 1, ymax - ymin + 1];
-    if (dx == dy) return { xmin, xmax, ymin, ymax };
-    else if (dx < dy)
-      return {
-        xmin: xmin - Math.floor((dy - dx) / 2),
-        xmax: xmax + Math.ceil((dy - dx) / 2),
-        ymin,
-        ymax,
-      };
-    else
-      return {
-        xmin,
-        xmax,
-        ymin: ymin - Math.floor((dx - dy) / 2),
-        ymax: ymax + Math.ceil((dx - dy) / 2),
-      };
+    return boundingSquare(this.relpoints);
   }
 
   canRotate(): boolean {
-    return this.transform(({ relative }) => {
-      const square = this.boundingSquare();
-      const size = square.xmax - square.xmin + 1;
-
-      return { relative: translate(rotate(relative), point(size - 1, 0)) };
-    }, true);
+    return this.transform(
+      ({ relative }) => smartRotate(this.grid, relative, this.position),
+      true,
+    );
   }
 
   rotate(): void {
-    this.transform(({ relative }) => {
-      const square = this.boundingSquare();
-      const size = square.xmax - square.xmin + 1;
-
-      return { relative: translate(rotate(relative), point(size - 1, 0)) };
-    }, false);
+    this.transform(
+      ({ relative }) => smartRotate(this.grid, relative, this.position),
+      false,
+    );
   }
 
   canSpawn(): boolean {
