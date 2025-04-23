@@ -2,9 +2,11 @@ import { KeyboardEvent, useRef, useState } from 'react';
 import './App.css';
 import { randomTetris, Tetris } from './tetris/tetris';
 import { render } from './tetris/render';
+import { Input, InputHandler } from './tetris/input';
 
 function App() {
   const [tetris, setTetris] = useState<Tetris | undefined>();
+  const [inputHandler, setInputHandler] = useState<InputHandler | undefined>();
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<'init' | 'playing' | 'finished'>('init');
 
@@ -29,16 +31,24 @@ function App() {
   }
 
   function generateTetris() {
-    const tetris = randomTetris();
+    const next = randomTetris();
 
-    setTetris(old => {
-      old?.stop();
-      return tetris;
-    });
+    tetris?.stop();
+    inputHandler?.detach();
 
-    tetris.onUpdate(update);
+    const nextInputHandler = new Input(next);
+    if (gameCanvas.current == null) {
+      throw new Error('no canvas available to plug input handler');
+    } else {
+      nextInputHandler.attach(gameCanvas.current);
+    }
 
-    tetris.start();
+    setTetris(next);
+    setInputHandler(nextInputHandler);
+
+    next.onUpdate(update);
+
+    next.start();
   }
 
   function handleInput(event: KeyboardEvent<HTMLCanvasElement>) {
@@ -46,35 +56,6 @@ function App() {
     setPressedKey(event.code);
 
     switch (event.code) {
-      case 'ArrowUp':
-        if (event.shiftKey) tetris.shiftUp();
-        else tetris.up();
-        break;
-
-      case 'ArrowDown':
-        tetris.down();
-        break;
-
-      case 'ArrowLeft':
-        tetris.left();
-        break;
-
-      case 'ArrowRight':
-        tetris.right();
-        break;
-
-      case 'Space':
-        tetris.space();
-        break;
-
-      case 'KeyC':
-        tetris.swap();
-        break;
-
-      case 'Tab':
-        tetris.cycle();
-        break;
-
       case 'KeyR':
         generateTetris();
         return;
