@@ -489,7 +489,7 @@ export class Tetris {
     this.usedMemory = false;
 
     // Spawn piece
-    const piece = this.generator.peek();
+    const piece = this.generator.pop();
     this.spawn(piece);
   }
 
@@ -506,7 +506,6 @@ export class Tetris {
     if (g.canSpawn()) {
       g.spawn();
       this.group = g;
-      this.generator.pop();
     } else {
       g.overwrite();
       this.finished = true;
