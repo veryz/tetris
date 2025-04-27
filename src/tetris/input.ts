@@ -30,6 +30,7 @@ export class Input implements InputHandler {
 
     el.addEventListener('keydown', this.keydownHandler);
     el.addEventListener('keyup', this.keyupHandler);
+    this.element = el;
 
     this.ticker.start(this.routineInterval);
 
@@ -41,6 +42,7 @@ export class Input implements InputHandler {
 
     this.element.removeEventListener('keydown', this.keydownHandler);
     this.element.removeEventListener('keyup', this.keyupHandler);
+    this.element = undefined;
 
     this.ticker.stop();
 
