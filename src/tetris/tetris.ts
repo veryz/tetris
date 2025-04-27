@@ -447,6 +447,7 @@ export class Tetris {
   private controller: Controller;
   private ticker = new Ticker();
   private listeners: ((tetris: Tetris) => void)[] = [];
+  private readonly tickInterval = 1000;
 
   constructor(
     public grid: Grid,
@@ -466,7 +467,7 @@ export class Tetris {
 
   start() {
     this.notify();
-    this.ticker.start(1000);
+    this.ticker.start(this.tickInterval);
   }
 
   stop() {
@@ -514,6 +515,11 @@ export class Tetris {
     }
 
     this.notify();
+  }
+
+  refreshTimer() {
+    this.ticker.stop();
+    this.ticker.start(this.tickInterval);
   }
 
   left(): void {
@@ -579,6 +585,7 @@ export class Tetris {
         this.tetris.group.position.x,
         this.tetris.group.position.y + 1,
       );
+      this.tetris.refreshTimer();
       this.tetris.notify();
     }
 
