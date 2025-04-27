@@ -434,6 +434,7 @@ interface Controller {
   down(): void;
   shiftUp(): void;
   cycle(): void;
+  dive(): void;
   space(): void;
   swap(): void;
 }
@@ -540,6 +541,9 @@ export class Tetris {
   cycle(): void {
     this.controller.cycle();
   }
+  dive(): void {
+    this.controller.dive();
+  }
   space(): void {
     this.controller.space();
   }
@@ -608,6 +612,15 @@ export class Tetris {
       this.tetris.notify();
     }
 
+    dive() {
+      this.tetris.group.move(
+        this.tetris.group.position.x,
+        this.tetris.group.position.y + this.tetris.group.distance,
+      );
+      this.tetris.refreshTimer();
+      this.tetris.notify();
+    }
+
     space() {
       this.tetris.group.move(
         this.tetris.group.position.x,
@@ -639,6 +652,7 @@ export class Tetris {
     down(): void {}
     shiftUp(): void {}
     cycle(): void {}
+    dive(): void {}
     space(): void {}
     swap(): void {}
   })();

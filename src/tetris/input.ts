@@ -101,6 +101,10 @@ export class Input implements InputHandler {
         tetris.swap();
         break;
 
+      case 'KeyX':
+        tetris.dive();
+        break;
+
       case 'Tab':
         tetris.cycle();
         break;
