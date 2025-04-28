@@ -493,6 +493,7 @@ export class Tetris {
     // Spawn piece
     const piece = this.generator.pop();
     this.spawn(piece);
+    this.notify();
   }
 
   spawn(piece: Piece) {
@@ -508,14 +509,13 @@ export class Tetris {
     if (g.canSpawn()) {
       g.spawn();
       this.group = g;
+      this.refreshTimer();
     } else {
       g.overwrite();
       this.finished = true;
       this.controller = this.finishedControls;
       this.ticker.stop();
     }
-
-    this.notify();
   }
 
   refreshTimer() {
