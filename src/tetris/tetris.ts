@@ -440,6 +440,7 @@ interface Controller {
 }
 
 export class Tetris {
+  public grid = new Grid(10, 20);
   private generator = new BatchGenerator<Piece>(this.pieces);
   private group: Group;
   public memory: Piece | null = null;
@@ -450,10 +451,7 @@ export class Tetris {
   private listeners: ((tetris: Tetris) => void)[] = [];
   private readonly tickInterval = 1000;
 
-  constructor(
-    public grid: Grid,
-    public speed: number,
-  ) {
+  constructor(public speed: number) {
     // Start with a dummy group
     this.group = group('T', this.grid, point(0, 0));
     this.init();
@@ -694,9 +692,7 @@ export class Tetris {
   }
 }
 
-export function randomTetris() {
-  console.log('creating a random tetris!');
-  const grid = new Grid(10, 20);
-  const tetris = new Tetris(grid, 1);
+export function newTetris() {
+  const tetris = new Tetris(1);
   return tetris;
 }

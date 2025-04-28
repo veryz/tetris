@@ -1,6 +1,6 @@
 import { KeyboardEvent, useRef, useState } from 'react';
 import './App.css';
-import { randomTetris, Tetris } from './tetris/tetris';
+import { newTetris, Tetris } from './tetris/tetris';
 import { render } from './tetris/render';
 import { Input, InputHandler } from './tetris/input';
 
@@ -31,7 +31,7 @@ function App() {
   }
 
   function generateTetris() {
-    const next = randomTetris();
+    const next = newTetris();
 
     tetris?.stop();
     inputHandler?.detach();
@@ -89,7 +89,10 @@ function App() {
               Status: <code>{status}</code>
             </li>
             <li>
-              Grid dim: {tetris?.grid.w} x {tetris?.grid.h}
+              Grid dim:{' '}
+              <code>
+                {tetris?.grid.w ?? '-'} × {tetris?.grid.h ?? '-'}
+              </code>
             </li>
             <li>
               Current: <code>{tetris?.currentGroup.name}</code>
@@ -100,15 +103,17 @@ function App() {
             <li>
               Next pieces: <code>{tetris?.nextPieces(5).join(' - ')}</code>
             </li>
-            <li>Speed: {tetris?.speed}</li>
+            <li>
+              Speed: <code>{tetris?.speed}</code>
+            </li>
             <li>
               Key: <code>{pressedKey}</code>
             </li>
           </ul>
 
-          <button onClick={generateTetris}>create a tetris!</button>
-          <button onClick={() => tetris?.start()}>start</button>
-          <button onClick={() => tetris?.stop()}>stop</button>
+          <button onClick={generateTetris}>Play</button>
+          <button onClick={() => tetris?.start()}>Resume</button>
+          <button onClick={() => tetris?.stop()}>Pause</button>
         </div>
       </div>
     </>
