@@ -51,13 +51,18 @@ function App() {
     next.start();
   }
 
+  function play() {
+    generateTetris();
+    gameCanvas.current?.focus();
+  }
+
   function handleInput(event: KeyboardEvent<HTMLCanvasElement>) {
     if (!tetris) return;
     setPressedKey(event.code);
 
     switch (event.code) {
       case 'KeyR':
-        generateTetris();
+        play();
         return;
 
       default:
@@ -111,7 +116,7 @@ function App() {
             </li>
           </ul>
 
-          <button onClick={generateTetris}>Play</button>
+          <button onClick={play}>Play</button>
           <button onClick={() => tetris?.start()}>Resume</button>
           <button onClick={() => tetris?.stop()}>Pause</button>
         </div>
