@@ -9,6 +9,7 @@ function App() {
   const [inputHandler, setInputHandler] = useState<InputHandler | undefined>();
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<'init' | 'playing' | 'finished'>('init');
+  const [showDebug, setDebug] = useState(false);
 
   const gameCanvas = useRef<HTMLCanvasElement>(null);
   const batchCanvas = useRef<HTMLCanvasElement>(null);
@@ -65,6 +66,10 @@ function App() {
         play();
         return;
 
+      case 'KeyI':
+        setDebug(!showDebug);
+        return;
+
       default:
         return;
     }
@@ -89,7 +94,7 @@ function App() {
         <canvas ref={batchCanvas} id="batch" width="120" height="570"></canvas>
 
         <div id="panel">
-          <ul id="debug">
+          <ul id="debug" hidden={!showDebug}>
             <li>
               Status: <code>{status}</code>
             </li>
