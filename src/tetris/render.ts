@@ -9,26 +9,71 @@ interface Element {
 }
 
 function color2rgb(color: Color) {
-  if (color == 'blank') return 'lightgray';
-  return color;
+  return {
+    blank: 'lightgray',
+    blue: 'rgb( 0, 0, 255)',
+    cyan: 'rgb( 0, 255, 255)',
+    green: 'rgb( 0, 192, 0)',
+    orange: 'rgb(255, 127, 0)',
+    purple: 'rgb(255, 0, 255)',
+    red: 'rgb(255, 0, 0)',
+    yellow: 'rgb(255, 255, 0)',
+  }[color];
+}
+
+function color2light(color: Color) {
+  return {
+    blank: 'lightgray',
+    blue: 'rgba(6, 6, 255, 0.5)',
+    cyan: 'rgba(0, 255, 255, 0.5)',
+    green: 'rgba(0, 192, 0, 0.5)',
+    orange: 'rgba(255, 127, 0, 0.5)',
+    purple: 'rgba(255, 0, 255, 0.5)',
+    red: 'rgba(255, 0, 0, 0.5)',
+    yellow: 'rgba(255, 255, 0, 0.5)',
+  }[color];
 }
 
 function piece2element(piece: Piece): Element {
   switch (piece) {
     case 'L':
-      return { color: 'orange', data: [0, 0, 1, 0, 1, 1, 1], lines: 2 };
+      return {
+        color: color2rgb('orange'),
+        data: [0, 0, 1, 0, 1, 1, 1],
+        lines: 2,
+      };
     case 'J':
-      return { color: 'blue', data: [1, 0, 0, 0, 1, 1, 1, 0], lines: 2 };
+      return {
+        color: color2rgb('blue'),
+        data: [1, 0, 0, 0, 1, 1, 1, 0],
+        lines: 2,
+      };
     case 'I':
-      return { color: 'cyan', data: [1, 1, 1, 1], lines: 1 };
+      return { color: color2rgb('cyan'), data: [1, 1, 1, 1], lines: 1 };
     case 'O':
-      return { color: 'yellow', data: [1, 1, 0, 0, 1, 1, 0, 0], lines: 2 };
+      return {
+        color: color2rgb('yellow'),
+        data: [1, 1, 0, 0, 1, 1, 0, 0],
+        lines: 2,
+      };
     case 'S':
-      return { color: 'green', data: [0, 1, 1, 0, 1, 1, 0, 0], lines: 2 };
+      return {
+        color: color2rgb('green'),
+        data: [0, 1, 1, 0, 1, 1, 0, 0],
+        lines: 2,
+      };
     case 'Z':
-      return { color: 'red', data: [1, 1, 0, 0, 0, 1, 1, 0], lines: 2 };
+      return {
+        color: color2rgb('red'),
+        data: [1, 1, 0, 0, 0, 1, 1, 0],
+        lines: 2,
+      };
     case 'T':
-      return { color: 'purple', data: [0, 1, 0, 0, 1, 1, 1, 0], lines: 2 };
+      return {
+        color: color2rgb('purple'),
+        data: [0, 1, 0, 0, 1, 1, 1, 0],
+        lines: 2,
+      };
   }
 }
 
@@ -95,7 +140,7 @@ function renderGroupProjection(tetris: Tetris, canvas: HTMLCanvasElement) {
   tetris.currentGroup.projected.forEach(pt => {
     const color = tetris.grid.get(pt.x, pt.y);
     if (color !== 'blank') return;
-    ctx.fillStyle = 'magenta';
+    ctx.fillStyle = color2light(tetris.currentGroup.color);
     ctx.fillRect(pt.x * xfactor, pt.y * yfactor, xfactor, yfactor);
   });
 }

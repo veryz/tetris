@@ -5,8 +5,11 @@
 }
 
 canvas {
-  border: 1px solid black;
   margin: 0 15px;
+}
+
+#tetris {
+  border: 1px solid black;
 }
 
 #game {

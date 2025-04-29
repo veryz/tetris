@@ -131,6 +131,7 @@ export interface Box {
 export interface Group {
   name: Piece;
   grid: Grid;
+  color: Color;
   points: Point[];
   position: Position;
   canRotate(): boolean;
