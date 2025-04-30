@@ -466,12 +466,13 @@ export class Tetris {
   }
 
   start() {
-    this.notify();
     this.ticker.start(this.tickInterval);
+    this.notify();
   }
 
   stop() {
     this.ticker.stop();
+    this.notify();
   }
 
   onUpdate(fn: (tetris: Tetris) => void) {
@@ -672,6 +673,10 @@ export class Tetris {
 
   nextPieces(n: number) {
     return this.generator.predict(n);
+  }
+
+  isPaused() {
+    return !this.finished && !this.ticker.isRunning();
   }
 
   get currentGroup() {

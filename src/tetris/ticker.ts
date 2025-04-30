@@ -23,4 +23,8 @@ export class Ticker {
   tick() {
     this.listeners.forEach(fn => fn());
   }
+
+  isRunning() {
+    return this.timer != null;
+  }
 }

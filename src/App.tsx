@@ -8,7 +8,9 @@ function App() {
   const [tetris, setTetris] = useState<Tetris | undefined>();
   const [inputHandler, setInputHandler] = useState<InputHandler | undefined>();
   const [pressedKey, setPressedKey] = useState<string | undefined>(undefined);
-  const [status, setStatus] = useState<'init' | 'playing' | 'finished'>('init');
+  const [status, setStatus] = useState<
+    'init' | 'playing' | 'paused' | 'finished'
+  >('init');
   const [showDebug, setDebug] = useState(false);
 
   const gameCanvas = useRef<HTMLCanvasElement>(null);
@@ -28,7 +30,9 @@ function App() {
       memoryCanvas.current,
     );
 
-    setStatus(() => (tetris.finished ? 'finished' : 'playing'));
+    setStatus(() =>
+      tetris.finished ? 'finished' : tetris.isPaused() ? 'paused' : 'playing',
+    );
   }
 
   function generateTetris() {
@@ -122,8 +126,13 @@ function App() {
           </ul>
 
           <button onClick={play}>Play</button>
-          <button onClick={() => tetris?.start()}>Resume</button>
-          <button onClick={() => tetris?.stop()}>Pause</button>
+          <button
+            onClick={() =>
+              status == 'paused' ? tetris?.start() : tetris?.stop()
+            }
+          >
+            {status == 'paused' ? 'Resume' : 'Pause'}
+          </button>
         </div>
       </div>
     </>
