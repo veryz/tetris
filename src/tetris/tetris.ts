@@ -135,14 +135,14 @@ export interface Group {
   points: Point[];
   position: Position;
   canRotate(): boolean;
-  rotate(): void;
+  rotate(): boolean;
   canSpawn(): boolean;
   spawn(): void;
   fill(): void;
   overwrite(): void;
   remove(): void;
   canMove(x: number, y: number): boolean;
-  move(x: number, y: number): void;
+  move(x: number, y: number): boolean;
   boundingBox(): Box;
   projected: Point[];
   distance: number;
@@ -270,8 +270,8 @@ abstract class AbstractGroup implements Group {
     );
   }
 
-  rotate(): void {
-    this.transform(
+  rotate(): boolean {
+    return this.transform(
       ({ relative }) => smartRotate(this.grid, relative, this.position),
       false,
     );
@@ -305,8 +305,8 @@ abstract class AbstractGroup implements Group {
     return this.transform(() => ({ origin: point(x, y) }), true);
   }
 
-  move(x: number, y: number): void {
-    this.transform(() => ({ origin: point(x, y) }), false);
+  move(x: number, y: number): boolean {
+    return this.transform(() => ({ origin: point(x, y) }), false);
   }
 
   transform(
@@ -585,11 +585,11 @@ export class Tetris {
     }
 
     down() {
-      this.tetris.group.move(
+      const success = this.tetris.group.move(
         this.tetris.group.position.x,
         this.tetris.group.position.y + 1,
       );
-      this.tetris.refreshTimer();
+      if (success) this.tetris.refreshTimer();
       this.tetris.notify();
     }
 
@@ -613,11 +613,15 @@ export class Tetris {
     }
 
     dive() {
+      const oldPosition = this.tetris.group.position;
       this.tetris.group.move(
         this.tetris.group.position.x,
         this.tetris.group.position.y + this.tetris.group.distance,
       );
-      this.tetris.refreshTimer();
+      const newPosition = this.tetris.group.position;
+      const moved =
+        oldPosition.x != newPosition.x || oldPosition.y != newPosition.y;
+      if (moved) this.tetris.refreshTimer();
       this.tetris.notify();
     }
 
