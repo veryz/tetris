@@ -156,7 +156,7 @@ function renderGridAlignment(tetris: Tetris, canvas: HTMLCanvasElement) {
 
   for (let x = 1; x < tetris.grid.w; x++) {
     for (let y = 1; y < tetris.grid.h; y++) {
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
       ctx.fillRect(x * xfactor - 1, y * yfactor - 1, 2, 2);
     }
   }
@@ -168,12 +168,21 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
     throw new Error('cannot draw');
   }
 
+  // Background
+  ctx.fillStyle = color2rgb('blank');
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Grid helper
+  renderGridAlignment(tetris, canvas);
+
+  // All blocks
   const xfactor = canvas.width / tetris.grid.w;
   const yfactor = canvas.height / tetris.grid.h;
 
   for (let x = 0; x < tetris.grid.w; x++) {
     for (let y = 0; y < tetris.grid.h; y++) {
       const color = tetris.grid.get(x, y);
+      if (color === 'blank') continue;
       ctx.fillStyle = color2rgb(color);
       ctx.fillRect(x * xfactor, y * yfactor, xfactor, yfactor);
     }
@@ -182,8 +191,6 @@ function renderGame(tetris: Tetris, canvas: HTMLCanvasElement) {
   if (!tetris.finished) {
     renderGroupProjection(tetris, canvas);
   }
-
-  renderGridAlignment(tetris, canvas);
 }
 
 function renderBatch(tetris: Tetris, canvas: HTMLCanvasElement) {
