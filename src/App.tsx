@@ -133,6 +133,30 @@ function App() {
           >
             {status == 'paused' ? 'Resume' : 'Pause'}
           </button>
+
+          <div id="help">
+            <fieldset>
+              <legend>Controls</legend>
+              <ul>
+                <li>
+                  <code>←</code> <code>→</code> <code>↓</code> : left,
+                  right, down
+                </li>
+                <li>
+                  <code>↑</code> : rotate
+                </li>
+                <li>
+                  <code>C</code> : swap
+                </li>
+                <li>
+                  <code>Space</code> : instant drop
+                </li>
+                <li>
+                  <code>X</code> : instant dive
+                </li>
+              </ul>
+            </fieldset>
+          </div>
         </div>
       </div>
     </>
