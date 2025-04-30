@@ -73,7 +73,10 @@ export class Input implements InputHandler {
   press(event: KeyboardEvent) {
     const tetris = this.tetris;
 
-    if (this.holding[event.code]) return;
+    if (this.holding[event.code]) {
+      event.preventDefault();
+      return;
+    }
 
     switch (event.code) {
       case 'ArrowUp':
