@@ -2,7 +2,71 @@ import { KeyboardEvent, useRef, useState } from 'react';
 import './App.css';
 import { newTetris, Tetris } from './tetris/tetris';
 import { render } from './tetris/render';
-import { Input, InputHandler } from './tetris/input';
+import { Action, Input, InputHandler, Keybind } from './tetris/input';
+
+function ControlsStatic() {
+  return (
+    <>
+      <ul>
+        <li>
+          <code>←</code> <code>→</code> <code>↓</code> : left, right, down
+        </li>
+        <li>
+          <code>↑</code> : rotate
+        </li>
+        <li>
+          <code>C</code> : swap
+        </li>
+        <li>
+          <code>Space</code> : instant drop
+        </li>
+        <li>
+          <code>X</code> : instant dive
+        </li>
+      </ul>
+    </>
+  );
+}
+
+function ControlsDynamic({ inputHandler }: { inputHandler: InputHandler }) {
+  const [keybind, setKeybind] = useState<Keybind>(inputHandler.getKeybind());
+
+  function handleBind(action: Action) {
+    return (e: KeyboardEvent) => {
+      e.preventDefault();
+      inputHandler?.setKeybind(action, e.code);
+      setKeybind(inputHandler?.getKeybind());
+    };
+  }
+
+  const controls: { action: Action; name: string }[] = [
+    { action: 'up', name: 'Rotate' },
+    { action: 'left', name: 'Left' },
+    { action: 'right', name: 'Right' },
+    { action: 'down', name: 'Down' },
+    { action: 'c', name: 'Swap' },
+    { action: 'space', name: 'Drop' },
+    { action: 'x', name: 'Dive' },
+  ];
+
+  const list = controls.map(c => (
+    <li key={c.action}>
+      <input
+        type="text"
+        onKeyDown={handleBind(c.action)}
+        value={keybind?.[c.action] ?? ''}
+        readOnly
+      />{' '}
+      {c.name}
+    </li>
+  ));
+
+  return (
+    <>
+      <ul>{list}</ul>
+    </>
+  );
+}
 
 function App() {
   const [tetris, setTetris] = useState<Tetris | undefined>();
@@ -12,6 +76,7 @@ function App() {
     'init' | 'playing' | 'paused' | 'finished'
   >('init');
   const [showDebug, setDebug] = useState(false);
+  const [customizedKeybinding, setCustomizedKeybinding] = useState(false);
 
   const gameCanvas = useRef<HTMLCanvasElement>(null);
   const batchCanvas = useRef<HTMLCanvasElement>(null);
@@ -81,6 +146,28 @@ function App() {
     event.preventDefault();
   }
 
+  function resetInputs() {
+    if (tetris == null) {
+      throw new Error('cannot reset inputs for with no tetris');
+    }
+    if (gameCanvas.current == null) {
+      throw new Error('cannot attach inputs with no game canvas');
+    }
+    if (inputHandler != null) {
+      inputHandler.detach();
+      const next = new Input(tetris);
+      next.attach(gameCanvas.current);
+      setInputHandler(next);
+    }
+  }
+
+  const controls =
+    customizedKeybinding && inputHandler ? (
+      <ControlsDynamic inputHandler={inputHandler} />
+    ) : (
+      <ControlsStatic />
+    );
+
   return (
     <>
       <div id="game">
@@ -137,24 +224,27 @@ function App() {
           <div id="help">
             <fieldset>
               <legend>Controls</legend>
-              <ul>
-                <li>
-                  <code>←</code> <code>→</code> <code>↓</code> : left,
-                  right, down
-                </li>
-                <li>
-                  <code>↑</code> : rotate
-                </li>
-                <li>
-                  <code>C</code> : swap
-                </li>
-                <li>
-                  <code>Space</code> : instant drop
-                </li>
-                <li>
-                  <code>X</code> : instant dive
-                </li>
-              </ul>
+
+              {controls}
+
+              {customizedKeybinding ? (
+                <button
+                  onClick={() => {
+                    resetInputs();
+                    setCustomizedKeybinding(false);
+                  }}
+                >
+                  Default
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (tetris) setCustomizedKeybinding(true);
+                  }}
+                >
+                  Customize
+                </button>
+              )}
             </fieldset>
           </div>
         </div>

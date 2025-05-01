@@ -1,12 +1,24 @@
 import { Tetris } from './tetris';
 import { Ticker } from './ticker';
 
+export type Action =
+  | 'down'
+  | 'left'
+  | 'right'
+  | 'up'
+  | 'space'
+  | 'c'
+  | 'x'
+  | 'tab';
+export type KeyboardCode = KeyboardEvent['code'];
+export type Keybind = Record<Action, KeyboardCode>;
+
 export interface InputHandler {
   attach(el: HTMLElement): boolean;
   detach(): boolean;
+  setKeybind(action: Action, key: KeyboardCode): void;
+  getKeybind(): Keybind;
 }
-
-export type KeyboardCode = KeyboardEvent['code'];
 
 function timeNow() {
   return new Date().getTime();
@@ -20,6 +32,16 @@ export class Input implements InputHandler {
   private readonly routineInterval = 32;
   private readonly holdBootupTime = 128;
   private holding: Record<KeyboardCode, number | null> = {};
+  private keybind = {
+    down: 'ArrowDown',
+    up: 'ArrowUp',
+    left: 'ArrowLeft',
+    right: 'ArrowRight',
+    space: 'Space',
+    c: 'KeyC',
+    x: 'KeyX',
+    tab: 'Tab',
+  };
 
   constructor(readonly tetris: Tetris) {
     this.ticker.onTick(() => this.routine());
@@ -61,9 +83,9 @@ export class Input implements InputHandler {
       if (diff > limit) fn();
     };
 
-    handle('ArrowDown', limit, () => tetris.down());
-    handle('ArrowLeft', limit, () => tetris.left());
-    handle('ArrowRight', limit, () => tetris.right());
+    handle(this.keybind.down, limit, () => tetris.down());
+    handle(this.keybind.left, limit, () => tetris.left());
+    handle(this.keybind.right, limit, () => tetris.right());
   }
 
   release(event: KeyboardEvent) {
@@ -79,36 +101,36 @@ export class Input implements InputHandler {
     }
 
     switch (event.code) {
-      case 'ArrowUp':
+      case this.keybind.up:
         if (event.shiftKey) tetris.shiftUp();
         else tetris.up();
         break;
 
-      case 'ArrowDown':
+      case this.keybind.down:
         tetris.down();
         break;
 
-      case 'ArrowLeft':
+      case this.keybind.left:
         tetris.left();
         break;
 
-      case 'ArrowRight':
+      case this.keybind.right:
         tetris.right();
         break;
 
-      case 'Space':
+      case this.keybind.space:
         tetris.space();
         break;
 
-      case 'KeyC':
+      case this.keybind.c:
         tetris.swap();
         break;
 
-      case 'KeyX':
+      case this.keybind.x:
         tetris.dive();
         break;
 
-      case 'Tab':
+      case this.keybind.tab:
         tetris.cycle();
         break;
 
@@ -118,5 +140,13 @@ export class Input implements InputHandler {
 
     this.holding[event.code] = timeNow();
     event.preventDefault();
+  }
+
+  setKeybind(action: Action, key: KeyboardCode) {
+    this.keybind[action] = key;
+  }
+
+  getKeybind() {
+    return { ...this.keybind };
   }
 }

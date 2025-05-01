@@ -32,3 +32,11 @@ canvas {
 #help li {
   list-style-type: none;
 }
+
+#help input {
+  width: 100px;
+}
+
+#help button {
+  width: 100%;
+}
