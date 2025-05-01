@@ -1,15 +1,17 @@
 import { Tetris } from './tetris';
 import { Ticker } from './ticker';
 
-export type Action =
-  | 'down'
-  | 'left'
-  | 'right'
-  | 'up'
-  | 'space'
-  | 'c'
-  | 'x'
-  | 'tab';
+export const ACTIONS = [
+  'down',
+  'left',
+  'right',
+  'up',
+  'space',
+  'c',
+  'x',
+  'tab',
+] as const;
+export type Action = (typeof ACTIONS)[number];
 export type KeyboardCode = KeyboardEvent['code'];
 export type Keybind = Record<Action, KeyboardCode>;
 
@@ -27,7 +29,7 @@ function timeNow() {
 }
 
 export class Input implements InputHandler {
-  static readonly DefautKeybind = {
+  static readonly DefaultKeybind = {
     down: 'ArrowDown',
     up: 'ArrowUp',
     left: 'ArrowLeft',
@@ -45,7 +47,7 @@ export class Input implements InputHandler {
   private readonly routineInterval = 32;
   private readonly holdBootupTime = 128;
   private holding: Record<KeyboardCode, number | null> = {};
-  private keybind = { ...Input.DefautKeybind };
+  private keybind = { ...Input.DefaultKeybind };
 
   constructor(public tetris: Tetris) {
     this.ticker.onTick(() => this.routine());
@@ -147,10 +149,13 @@ export class Input implements InputHandler {
   }
 
   resetKeybind() {
-    this.keybind = { ...Input.DefautKeybind };
+    this.keybind = { ...Input.DefaultKeybind };
   }
 
   setKeybind(action: Action, key: KeyboardCode) {
+    ACTIONS.forEach(a => {
+      if (this.keybind[a] === key) this.keybind[a] = 'unbound';
+    });
     this.keybind[action] = key;
   }
 
