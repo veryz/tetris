@@ -40,10 +40,10 @@ function ControlsDynamic({ inputHandler }: { inputHandler: InputHandler }) {
   }
 
   const controls: { action: Action; name: string }[] = [
-    { action: 'up', name: 'Rotate' },
     { action: 'left', name: 'Left' },
     { action: 'right', name: 'Right' },
     { action: 'down', name: 'Down' },
+    { action: 'up', name: 'Rotate' },
     { action: 'c', name: 'Swap' },
     { action: 'space', name: 'Drop' },
     { action: 'x', name: 'Dive' },
