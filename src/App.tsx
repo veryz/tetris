@@ -100,24 +100,31 @@ function App() {
     );
   }
 
+  function initHandler(tetris: Tetris) {
+    if (inputHandler == null) {
+      const nextInputHandler = new Input(tetris);
+      if (gameCanvas.current == null) {
+        throw new Error('no canvas available to plug input handler');
+      } else {
+        nextInputHandler.attach(gameCanvas.current);
+      }
+      setInputHandler(nextInputHandler);
+      return nextInputHandler;
+    } else {
+      return inputHandler;
+    }
+  }
+
   function generateTetris() {
     const next = newTetris();
 
     tetris?.stop();
-    inputHandler?.detach();
-
-    const nextInputHandler = new Input(next);
-    if (gameCanvas.current == null) {
-      throw new Error('no canvas available to plug input handler');
-    } else {
-      nextInputHandler.attach(gameCanvas.current);
-    }
-
     setTetris(next);
-    setInputHandler(nextInputHandler);
 
+    const handler = inputHandler ?? initHandler(next);
+
+    handler.tetris = next;
     next.onUpdate(update);
-
     next.start();
   }
 
@@ -144,21 +151,6 @@ function App() {
     }
 
     event.preventDefault();
-  }
-
-  function resetInputs() {
-    if (tetris == null) {
-      throw new Error('cannot reset inputs for with no tetris');
-    }
-    if (gameCanvas.current == null) {
-      throw new Error('cannot attach inputs with no game canvas');
-    }
-    if (inputHandler != null) {
-      inputHandler.detach();
-      const next = new Input(tetris);
-      next.attach(gameCanvas.current);
-      setInputHandler(next);
-    }
   }
 
   const controls =
@@ -230,7 +222,7 @@ function App() {
               {customizedKeybinding ? (
                 <button
                   onClick={() => {
-                    resetInputs();
+                    inputHandler?.resetKeybind();
                     setCustomizedKeybinding(false);
                   }}
                 >
