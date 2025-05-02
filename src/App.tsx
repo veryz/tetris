@@ -177,32 +177,34 @@ function App() {
         <canvas ref={batchCanvas} id="batch" width="120" height="570"></canvas>
 
         <div id="panel">
-          <ul id="debug" hidden={!showDebug}>
-            <li>
-              Status: <code>{status}</code>
-            </li>
-            <li>
-              Grid dim:{' '}
-              <code>
-                {tetris?.grid.w ?? '-'} × {tetris?.grid.h ?? '-'}
-              </code>
-            </li>
-            <li>
-              Current: <code>{tetris?.currentGroup.name}</code>
-            </li>
-            <li>
-              Memory: <code>{tetris?.memory ?? 'none'}</code>
-            </li>
-            <li>
-              Next pieces: <code>{tetris?.nextPieces(5).join(' - ')}</code>
-            </li>
-            <li>
-              Speed: <code>{tetris?.speed}</code>
-            </li>
-            <li>
-              Key: <code>{pressedKey}</code>
-            </li>
-          </ul>
+          {showDebug && (
+            <ul id="debug">
+              <li>
+                Status: <code>{status}</code>
+              </li>
+              <li>
+                Grid dim:{' '}
+                <code>
+                  {tetris?.grid.w ?? '-'} × {tetris?.grid.h ?? '-'}
+                </code>
+              </li>
+              <li>
+                Current: <code>{tetris?.currentGroup.name}</code>
+              </li>
+              <li>
+                Memory: <code>{tetris?.memory ?? 'none'}</code>
+              </li>
+              <li>
+                Next pieces: <code>{tetris?.nextPieces(5).join(' - ')}</code>
+              </li>
+              <li>
+                Speed: <code>{tetris?.speed}</code>
+              </li>
+              <li>
+                Key: <code>{pressedKey}</code>
+              </li>
+            </ul>
+          )}
 
           <button onClick={play}>Play</button>
           <button
